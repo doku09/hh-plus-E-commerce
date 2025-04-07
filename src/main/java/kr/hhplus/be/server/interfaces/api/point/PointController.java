@@ -25,7 +25,9 @@ public class PointController implements PointApi{
 
 	@Override
 	public ResponseEntity<Long> use(PointUseRequest request) {
-		return ResponseEntity.ok(pointService.use(request.userId(), request.amount()));
+
+//		return ResponseEntity.ok(pointService.use(PointUseRequest);
+		return null;
 	}
 
 	@Override
