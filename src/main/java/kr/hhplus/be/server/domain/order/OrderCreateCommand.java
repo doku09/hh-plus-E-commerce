@@ -4,6 +4,7 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserCommand;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -20,7 +21,15 @@ public class OrderCreateCommand {
 		this.orderItems = orderItems;
 	}
 
-	public static OrderCreateCommand of(OrderStatus status, User user,List<OrderItem> orderItems) {
-		return new OrderCreateCommand(status, user, orderItems);
+	public static OrderCreateCommand of(OrderStatus status, User user) {
+		return new OrderCreateCommand(status, user, new ArrayList<>());
+	}
+
+	public void changeStatus (OrderStatus status) {
+		this.status = status;
+	}
+
+	public void addItem(OrderItem orderItem) {
+		this.orderItems.add(orderItem);
 	}
 }
