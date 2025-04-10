@@ -28,12 +28,9 @@ public class OrderFacade {
 	@Transactional
 	public OrderResult order(OrderCriteria criteria) {
 
-		UserInfo userInfo = userService.findById(criteria.getUserId());
+		User user = userService.findById(criteria.getUserId());
 
-		OrderCreateCommand orderCreateCommand = OrderCreateCommand.of(
-			OrderStatus.ORDERED,
-			User.of(userInfo.id(),userInfo.name())
-		);
+		OrderCreateCommand orderCreateCommand = OrderCreateCommand.of(OrderStatus.ORDERED,user);
 
 		// 주문아이템 (상품정보, 개수) 루프 돌면서 저장 후 Order 저장
 		for (OrderCriteria.OrderProduct orderProduct : criteria.getOrderProducts()) {
