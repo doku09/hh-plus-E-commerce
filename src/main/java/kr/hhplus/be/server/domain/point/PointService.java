@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.point;
 
-import kr.hhplus.be.server.common.exception.NotEnoughPointException;
 import kr.hhplus.be.server.common.exception.NotFoundUserException;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;

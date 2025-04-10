@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.api.point.request;
+package kr.hhplus.be.server.interfaces.api.point;
 
 import kr.hhplus.be.server.domain.point.PointChargeCommand;
 import kr.hhplus.be.server.domain.point.TransactionType;

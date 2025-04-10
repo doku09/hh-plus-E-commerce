@@ -1,10 +1,7 @@
 package kr.hhplus.be.server.interfaces.api.point;
 
-import kr.hhplus.be.server.domain.point.PointChargeCommand;
 import kr.hhplus.be.server.domain.point.PointInfo;
 import kr.hhplus.be.server.domain.point.PointService;
-import kr.hhplus.be.server.interfaces.api.point.request.PointChargeRequest;
-import kr.hhplus.be.server.interfaces.api.point.request.PointUseRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

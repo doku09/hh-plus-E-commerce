@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.domain.point;
 
-import kr.hhplus.be.server.interfaces.api.point.request.PointChargeRequest;
+import kr.hhplus.be.server.interfaces.api.point.PointChargeRequest;
 import lombok.Builder;
 
 @Builder
