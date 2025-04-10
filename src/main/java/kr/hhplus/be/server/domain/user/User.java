@@ -17,4 +17,15 @@ public class User extends BaseTimeEntity {
 
 	private String name;
 
+	private User(String name) {
+		this.name = name;
+	}
+
+	public static User create(String name) {
+		return new User(name);
+	}
+
+	public static User of(long id, String name) {
+		return new User(id, name);
+	}
 }

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.user;
 
+import kr.hhplus.be.server.common.exception.NotFoundUserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,8 @@ public class UserService {
 		return UserInfo.from(userRepository.save(userJoinCommand.toEntity()));
 	}
 
-	public User findById(Long id) {
-		return userRepository.findById(id);
+	public UserInfo findById(Long id) {
+		User user = userRepository.findById(id).orElseThrow(NotFoundUserException::new);
+		return UserInfo.from(user);
 	}
 }
