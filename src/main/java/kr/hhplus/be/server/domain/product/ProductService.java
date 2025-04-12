@@ -36,4 +36,8 @@ public class ProductService {
 			product.getPrice()
 		);
 	}
+
+	public ProductStock findStockByProductId(long id) {
+		return productRepository.findStockByProductId(id).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_STOCK));
+	}
 }

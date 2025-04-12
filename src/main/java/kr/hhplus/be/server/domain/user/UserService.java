@@ -17,8 +17,7 @@ public class UserService {
 		return UserInfo.from(userRepository.save(userJoinCommand.toEntity()));
 	}
 
-	public UserInfo findById(Long id) {
-		User user = userRepository.findById(id).orElseThrow(NotFoundUserException::new);
-		return UserInfo.from(user);
+	public User findById(Long id) {
+		return userRepository.findById(id).orElseThrow(NotFoundUserException::new);
 	}
 }

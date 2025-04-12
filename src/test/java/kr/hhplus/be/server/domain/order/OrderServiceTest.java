@@ -32,12 +32,7 @@ class OrderServiceTest {
 	void order_notFoundUser_exception() {
 
 		// given
-		OrderCreateCommand orderCreateCommand = OrderCreateCommand.of(OrderStatus.ORDERED, null, List.of(
-				OrderItem.of(Product.create("상품1", 3000), 3),
-				OrderItem.of(Product.create("상품2", 5000), 3),
-				OrderItem.of(Product.create("상품3", 10000), 3)
-			)
-		);
+		OrderCreateCommand orderCreateCommand = OrderCreateCommand.of(OrderStatus.ORDERED, null);
 
 		// when
 
@@ -60,7 +55,7 @@ class OrderServiceTest {
 			OrderItem.of(Product.create("상품3", 10000), 3)
 		);
 
-		OrderCreateCommand orderCreateCommand = OrderCreateCommand.of(OrderStatus.ORDERED, User.of(userId, username), orderitems);
+		OrderCreateCommand orderCreateCommand = OrderCreateCommand.of(OrderStatus.ORDERED, User.of(userId, username));
 
 		// when
 		OrderInfo orderInfo = orderService.order(orderCreateCommand);

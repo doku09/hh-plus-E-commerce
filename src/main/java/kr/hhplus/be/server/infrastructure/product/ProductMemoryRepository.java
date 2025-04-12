@@ -37,4 +37,9 @@ public class ProductMemoryRepository implements ProductRepository {
 	public Optional<List<Product>> findByIds(List<String> productIds) {
 		return Optional.empty();
 	}
+
+	@Override
+	public Optional<ProductStock> findStockByProductId(long id) {
+		return Optional.empty();
+	}
 }
