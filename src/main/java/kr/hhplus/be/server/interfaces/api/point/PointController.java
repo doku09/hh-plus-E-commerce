@@ -28,7 +28,7 @@ public class PointController implements PointApi{
 	}
 
 	@Override
-	public ResponseEntity<Long> get(Long userId) {
-		return ResponseEntity.ok(pointService.get(userId));
+	public ResponseEntity<PointResponse> get(Long userId) {
+		return ResponseEntity.ok(PointResponse.from(pointService.get(userId)));
 	}
 }
