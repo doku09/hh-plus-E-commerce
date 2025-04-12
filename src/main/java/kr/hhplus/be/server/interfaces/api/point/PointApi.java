@@ -73,5 +73,5 @@ public interface PointApi {
 		@ApiResponse(responseCode = "200", description = "포인트 반환")
 	})
 	@GetMapping("/{userId}")
-	ResponseEntity<Long> get(@PathVariable Long userId);
+	ResponseEntity<PointResponse> get(@PathVariable Long userId);
 }

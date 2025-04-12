@@ -5,8 +5,6 @@ import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class CouponService {
@@ -23,7 +21,7 @@ public class CouponService {
 		return couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 	}
 
-	// 쿠폰 발행
+	// 쿠폰 발행 TODO 회원이 이미 발행받았는지 확인
 	public void issueCoupon(IssueCouponCommand command) {
 
 		command.getCoupon().issue();
@@ -31,6 +29,4 @@ public class CouponService {
 		IssuedCoupon issuedCoupon = IssuedCoupon.createIssuedCoupon(command.getUser(), command.getCoupon());
 		couponRepository.issueCoupon(issuedCoupon);
 	}
-
-
 }

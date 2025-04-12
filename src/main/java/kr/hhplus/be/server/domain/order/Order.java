@@ -24,6 +24,12 @@ public class Order extends BaseTimeEntity {
 		super.createdAt = createdAt;
 	}
 
+	public static int getTotalPrice(List<OrderItem> orderItems) {
+		return orderItems.stream()
+			.mapToInt(OrderItem::getTotalPrice)
+			.sum();
+	}
+
 	public static Order createOrder(User user, List<OrderItem> orderItems) {
 
 		if (null == user) {
@@ -31,9 +37,7 @@ public class Order extends BaseTimeEntity {
 		}
 
 		// orderItems를 돌면서 주문의 총합을 계산한다.
-		int totalPrice = orderItems.stream()
-			.mapToInt(OrderItem::getTotalPrice)
-			.sum();
+		int totalPrice = getTotalPrice(orderItems);
 
 		// orderItem에 order를 바인딩해주기 위해 생성한다.
 		Order order = new Order(totalPrice, user, OrderStatus.ORDERED, LocalDateTime.now());

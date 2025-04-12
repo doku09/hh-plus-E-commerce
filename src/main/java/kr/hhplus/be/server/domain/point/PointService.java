@@ -24,7 +24,6 @@ public class PointService {
 
 		// 회원 포인트를 찾는다 -> 없다? -> 포인트를 하나 만든다. -> 충전 포인트를 더해서 반환한다.
 		// orElseGet()을 활용하면 생성된 Point 엔티티를 다시 조회하지 않아도, save된 인스턴스를 바로 사용할 수 있어요.
-
 		Point point = pointRepository.findByUserId(findUser.getId()).orElseGet(
 			() -> pointRepository.save(
 				Point.builder()
@@ -67,7 +66,9 @@ public class PointService {
 	/**
 	 * 사용자의 현재 포인트를 조회합니다.
 	 */
-	public Long get(Long userId) {
-		return null;
+	public Point get(Long userId) {
+		return pointRepository.findByUserId(userId)
+			.orElseThrow(NotFoundUserException::new);
+
 	}
 }
