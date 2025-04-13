@@ -5,6 +5,8 @@ import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CouponService {
@@ -12,21 +14,40 @@ public class CouponService {
 	private final CouponRepository couponRepository;
 
 	// 쿠폰 등록
-	public Coupon register(CouponCreateCommand command) {
+	public CouponInfo.Coupon register(CouponCommand.Create command) {
+		Coupon coupon = Coupon.create(command.getName(), command.getDiscountPolicy(), command.getQuantity(),command.getCouponType() ,command.getUseStartDate(), command.getExpiredDate());
 
-		return couponRepository.saveCoupon(command.toEntity());
+		Coupon savedCoupon = couponRepository.saveCoupon(coupon);
+
+		return CouponInfo.Coupon.of(
+				savedCoupon.getName(),
+				savedCoupon.getUseStartDate(),
+				savedCoupon.getExpiredDate(),
+				savedCoupon.getQuantity(),
+				savedCoupon.getCouponType()
+		);
 	}
 
 	public Coupon findCouponById(long couponId) {
 		return couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 	}
 
-	// 쿠폰 발행 TODO 회원이 이미 발행받았는지 확인
-	public void issueCoupon(IssueCouponCommand command) {
+	public void issueCoupon(IssueCouponCommand.Issue command) {
 
-		command.getCoupon().issue();
+		Coupon findCoupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 
-		IssuedCoupon issuedCoupon = IssuedCoupon.createIssuedCoupon(command.getUser(), command.getCoupon());
+		List<IssuedCoupon> userCouponIds = couponRepository.findIssuedCouponByUserId(command.getUserId());
+
+		boolean hasCoupon = userCouponIds.stream().anyMatch(issuedCoupon -> issuedCoupon.getCouponId() == command.getCouponId());
+
+		if (hasCoupon) {
+			throw new GlobalBusinessException(ErrorCode.ALREADY_ISSUED_COUPON);
+		}
+
+		findCoupon.issue();
+
+		IssuedCoupon issuedCoupon = IssuedCoupon.createIssuedCoupon(command.getUserId(), command.getCouponId());
+
 		couponRepository.issueCoupon(issuedCoupon);
 	}
 }

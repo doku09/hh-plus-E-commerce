@@ -12,16 +12,5 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CouponFacade {
 
-	private final CouponService couponService;
-	private final UserService userService;
 
-	// 쿠폰 발행
-	@Transactional
-	public void issueCoupon(IssueCouponCriteria command) {
-
-		User user = userService.findById(command.getUserId());
-		Coupon coupon = couponService.findCouponById(command.getCouponId());
-
-		couponService.issueCoupon(IssueCouponCommand.of(user,coupon));
-	}
 }

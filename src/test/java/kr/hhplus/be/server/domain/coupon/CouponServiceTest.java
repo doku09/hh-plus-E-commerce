@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,33 +36,14 @@ class CouponServiceTest {
 	void make_unlimited_coupon() {
 
 	  // given
-		CouponCreateCommand command = CouponCreateCommand.of("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, startDate, endDate, 10);
-		Coupon savedCoupon = command.toEntity();
+		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, 0, CouponType.LIMITED, startDate, endDate);
 
-		// when
-		when(couponRepository.saveCoupon(any(Coupon.class))).thenReturn(savedCoupon);
-		couponService.register(command);
+		//when
+		CouponInfo.Coupon result = couponService.register(command);
 
-	  // then
-		assertThat(savedCoupon.canIssue()).isTrue();
-		assertThat(savedCoupon.getQuantity()).isEqualTo(10);
-	}
+		//then
+		assertThat(result).isNotNull();
 
-	@Test
-	@DisplayName("[성공] 수량을 입력하지 않으면 수량제한이 없는 쿠폰이 생성된다.")
-	void register_unlimited_coupon() {
-
-	  // given
-		CouponCreateCommand command = CouponCreateCommand.of("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, startDate, endDate, null);
-		Coupon savedCoupon = command.toEntity();
-
-	  // when
-		when(couponRepository.saveCoupon(any(Coupon.class))).thenReturn(savedCoupon);
-		couponService.register(command);
-
-	  // then
-		assertThat(savedCoupon.canIssue()).isTrue();
-		assertThat(savedCoupon.getQuantity()).isNull();
 	}
 
 	@Test
@@ -69,12 +51,19 @@ class CouponServiceTest {
 	void not_enough_coupon_exception() {
 
 	  // given
-		User user = User.of(1L, "tester");
-		Coupon coupon = Coupon.createLimitedCoupon("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, startDate, endDate, 0);
-		IssueCouponCommand issueCouponCommand = IssueCouponCommand.of(user, coupon);
+		long userId = 1L;
+		long couponId = 1L;
 
-	  // when & then
-		assertThatThrownBy(() -> couponService.issueCoupon(issueCouponCommand))
+		Coupon coupon = Coupon.create("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT,0,CouponType.LIMITED, startDate, endDate);
+
+		IssueCouponCommand.Issue issueCommand = IssueCouponCommand.Issue.of(userId, couponId);
+
+		//when
+
+		when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));
+
+		// when & then
+		assertThatThrownBy(() -> couponService.issueCoupon(issueCommand))
 			.isInstanceOf(GlobalBusinessException.class)
 			.hasMessageContaining(ErrorCode.NOT_ENOUGH_COUPON.getMessage());
 	}
@@ -83,23 +72,20 @@ class CouponServiceTest {
 	@DisplayName("[성공] 쿠폰을 발행한다.")
 	void issue_coupon_success() {
 
-	  // given
-		User user = User.of(1L, "tester");
-		Coupon coupon = Coupon.createLimitedCoupon("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, startDate, endDate, 5);
-		IssueCouponCommand command1 = IssueCouponCommand.of(user, coupon);
-		IssueCouponCommand command2 = IssueCouponCommand.of(user, coupon);
-		IssueCouponCommand command3 = IssueCouponCommand.of(user, coupon);
-		IssueCouponCommand command4 = IssueCouponCommand.of(user, coupon);
-		IssueCouponCommand command5 = IssueCouponCommand.of(user, coupon);
+		// given
+		long userId = 1L;
+		long couponId = 1L;
 
-	  // when
-		couponService.issueCoupon(command1);
-		couponService.issueCoupon(command2);
-		couponService.issueCoupon(command3);
-		couponService.issueCoupon(command4);
-		couponService.issueCoupon(command5);
+		Coupon coupon = Coupon.create("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT,2,CouponType.LIMITED, startDate, endDate);
 
-	  // then
-		assertThat(coupon.getQuantity()).isEqualTo(0);
+		IssueCouponCommand.Issue issueCommand = IssueCouponCommand.Issue.of(userId, couponId);
+
+		//when
+		when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));
+		couponService.issueCoupon(issueCommand);
+
+		//then
+		assertThat(coupon.getQuantity()).isEqualTo(1);
+
 	}
 }

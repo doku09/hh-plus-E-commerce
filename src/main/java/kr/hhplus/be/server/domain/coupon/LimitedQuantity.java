@@ -2,14 +2,24 @@ package kr.hhplus.be.server.domain.coupon;
 
 public class LimitedQuantity implements QuantityPolicy{
 
-	private final int maxQuantity;
+	private int maxQuantity;
 
 	public LimitedQuantity(int maxQuantity) {
 		this.maxQuantity = maxQuantity;
 	}
 
 	@Override
-	public boolean canIssue(Integer quantity) {
-		return quantity > 0;
+	public Integer getQuantity() {
+		return maxQuantity;
+	}
+
+	@Override
+	public boolean canIssue() {
+		return maxQuantity > 0;
+	}
+
+	@Override
+	public void substractCoupon() {
+		maxQuantity--;
 	}
 }

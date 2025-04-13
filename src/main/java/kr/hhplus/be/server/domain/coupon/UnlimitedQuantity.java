@@ -2,7 +2,16 @@ package kr.hhplus.be.server.domain.coupon;
 
 public class UnlimitedQuantity implements QuantityPolicy{
 	@Override
-	public boolean canIssue(Integer issuedCount) {
+	public Integer getQuantity() {
+		return null;
+	}
+
+	@Override
+	public boolean canIssue() {
 		return true;
+	}
+
+	@Override
+	public void substractCoupon() {
 	}
 }
