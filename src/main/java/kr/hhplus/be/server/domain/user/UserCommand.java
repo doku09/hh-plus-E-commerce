@@ -5,22 +5,16 @@ import lombok.Getter;
 @Getter
 public class UserCommand {
 
-	private long id;
+	@Getter
+	public static class Join {
+		private String username;
 
-	private String name;
+		private Join(String username) {
+			this.username = username;
+		}
 
-	private UserCommand(long id, String name) {
-		this.id = id;
-		this.name = name;
-	}
-
-	public User toEntity() {
-		return User.builder()
-			.name(this.name)
-			.build();
-	}
-
-	public static UserCommand of(long id, String name) {
-		return new UserCommand(id,name);
+		public static Join of(String username) {
+			return new Join(username);
+		}
 	}
 }

@@ -13,8 +13,9 @@ public class UserService {
 	/**
 	 * 회원가입
 	 */
-	public UserInfo join(UserJoinCommand userJoinCommand) {
-		return UserInfo.from(userRepository.save(userJoinCommand.toEntity()));
+	public UserInfo.User join(UserCommand.Join command) {
+		User savedUser = userRepository.save(User.create(command.getUsername()));
+		return UserInfo.User.of(savedUser.getId(), savedUser.getUsername());
 	}
 
 	public User findById(Long id) {

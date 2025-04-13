@@ -27,18 +27,15 @@ class UserServiceTest {
 		// given
 		String name = "테스트 계정";
 
-		UserJoinCommand command = UserJoinCommand.builder()
-			.name(name)
-			.build();
-
+		UserCommand.Join joinCommand = UserCommand.Join.of(name);
 		// when
 		when(userRepository.save(any(User.class)))
 			.thenReturn(new User(1L,name));
 
-		UserInfo joinedUser = userService.join(command);
+		UserInfo.User joinedUser = userService.join(joinCommand);
 
 		// then
-		assertThat(joinedUser.id()).isEqualTo(1L);
-		assertThat(joinedUser.name()).isEqualTo(name);
+		assertThat(joinedUser.getId()).isEqualTo(1L);
+		assertThat(joinedUser.getUsername()).isEqualTo(name);
 	}
 }

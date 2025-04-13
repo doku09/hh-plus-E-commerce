@@ -1,15 +1,12 @@
-package kr.hhplus.be.server.domain.user;
+package kr.hhplus.be.server.interfaces.user;
 
-import lombok.Getter;
+public class UserResponse {
 
-public record UserInfo(long id, String name) {
-
-	@Getter
 	public static class User {
 		private Long id;
 		private String username;
 
-		private User(Long id, String username) {
+		public User(Long id, String username) {
 			this.id = id;
 			this.username = username;
 		}
