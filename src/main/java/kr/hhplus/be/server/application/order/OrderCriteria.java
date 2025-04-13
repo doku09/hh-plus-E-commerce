@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.application.order;
 
+import kr.hhplus.be.server.domain.order.OrderCommand;
 import lombok.Getter;
 
 import java.util.List;
@@ -7,15 +8,39 @@ import java.util.List;
 @Getter
 public class OrderCriteria {
 
-	private List<OrderProduct> orderProducts;
-	private long couponId;
-	private long userId;
-
 	@Getter
-	public static class OrderProduct {
-		private long productId;
-		private int quantity;
+	public static class CreateOrder {
+		private List<OrderItem> orderItems;
+		private long userId;
+
+		public CreateOrder(long userId, List<OrderItem> orderItems) {
+			this.userId = userId;
+			this.orderItems = orderItems;
+		}
+
+		public static CreateOrder of(long userId, List<OrderItem> orderProducts) {
+			return new CreateOrder(userId, orderProducts);
+		}
+
+		public OrderCommand.Create toCommand() {
+			return OrderCommand.Create.of(userId);
+		}
 	}
 
 
+
+	@Getter
+	public static class OrderItem {
+		private long productId;
+		private int quantity;
+
+		private OrderItem(long productId, int quantity) {
+			this.productId = productId;
+			this.quantity = quantity;
+		}
+
+		public static OrderItem of(long productId, int quantity) {
+			return new OrderItem(productId, quantity);
+		}
+	}
 }
