@@ -29,12 +29,9 @@ class ProductServiceTest {
 	void not_productName_exception() {
 		
 	  // given
-			ProductCreateCommand command = ProductCreateCommand.builder()
-				.name("")
-				.price(10000)
-				.build();
+		ProductCommand.Create command = ProductCommand.Create.of(" ", 1000);
 
-	  // when & then
+		// when & then
 			assertThatThrownBy(() -> productService.register(command))
 				.isInstanceOf(GlobalBusinessException.class)
 				.hasMessage(ErrorCode.NOT_EMPTY_PRICE_NAME.getMessage());
@@ -46,10 +43,7 @@ class ProductServiceTest {
 	void registerProduct_negativePrice_throwException(int price) {
 		
 	  // given
-		ProductCreateCommand command = ProductCreateCommand.builder()
-			.name("당근")
-			.price(-10000)
-			.build();
+		ProductCommand.Create command = ProductCommand.Create.of("테스트", price);
 
 	  // when & then
 		assertThatThrownBy(() -> productService.register(command))
@@ -62,10 +56,7 @@ class ProductServiceTest {
 	void registerProduct_success(String name,int price) {
 
 	  // given
-		ProductCreateCommand command = ProductCreateCommand.builder()
-			.name(name)
-			.price(price)
-			.build();
+		ProductCommand.Create command = ProductCommand.Create.of(name, price);
 
 		// when
 		productService.register(command);

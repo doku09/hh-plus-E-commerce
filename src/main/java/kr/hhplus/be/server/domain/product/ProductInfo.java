@@ -5,21 +5,24 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Builder
-@Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class ProductInfo {
 
-	private long id;
-	private String name;
-	private int price;
+	@Getter
+	public static class Product {
 
-	public static ProductInfo of(long id, String name, int price) {
-		return ProductInfo.builder()
-			.id(id)
-			.name(name)
-			.price(price)
-			.build();
+		private long id;
+		private String name;
+		private int price;
+
+		private Product(long id, String name, int price) {
+			this.id = id;
+			this.name = name;
+			this.price = price;
+		}
+
+		public static Product of(long id, String name, int price) {
+			return new Product(id, name, price);
+		}
 	}
 }
