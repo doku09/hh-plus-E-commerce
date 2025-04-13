@@ -25,9 +25,6 @@ class PointServiceTest {
 	@Mock
 	private PointRepository pointRepository;
 
-	@Mock
-	private UserRepository userRepository;
-
 	@InjectMocks
 	private PointService pointService;
 
@@ -42,73 +39,16 @@ class PointServiceTest {
 			long userId = 1L;
 			long amount = Point.MAX_POINT + 1;
 
-			PointChargeCommand command = PointChargeCommand.builder()
-				.userId(userId)
-				.amount(amount)
-				.build();
+			when(pointRepository.findByUserId(userId))
+				.thenReturn(Optional.of(Point.of(0L, userId)));
 
-			// when
-			when(userRepository.findById(userId)).thenReturn(Optional.of(User.builder().build()));
+			PointCommand.Charge command = PointCommand.Charge.of(userId, amount);
 
 			//  then
 			assertThatThrownBy(() -> pointService.charge(command))
 				.isInstanceOf(MaxPointException.class);
 		}
 
-		@Test
-		@DisplayName("[실패] 충전하려는 회원정보가 없다.")
-		void charge_NotfoundUser() {
-
-		  // given
-			long userId = 2L;
-			long amount = 1000L;
-
-			PointChargeCommand command = PointChargeCommand.builder()
-				.userId(userId)
-				.amount(amount)
-				.build();
-
-			// when
-			when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-		  // then
-			assertThatThrownBy(() ->pointService.charge(command))
-				.isInstanceOf(NotFoundUserException.class);
-			verify(pointRepository,never()).findByUserId(userId);
-		}
-
-		@Test
-		@DisplayName("[성공] 회원이 포인트를 보유하고 있지않으면 포인트를 생성한다.")
-		void userNotPoint_craetePoint() {
-			long userId = 3L;
-			long amount = 3000;
-
-			User user = new User(userId, "tester");
-
-			Point craeted = Point.builder()
-				.user(user)
-				.amount(Point.ZERO_POINT)
-				.build();
-
-			Point afterCharge = Point.builder()
-				.user(user)
-				.amount(amount)
-				.build();
-
-			when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-			when(pointRepository.findByUserId(userId)).thenReturn(Optional.empty());
-			when(pointRepository.save(any(Point.class))).thenReturn(craeted);
-			when(pointRepository.update(any(Point.class))).thenReturn(afterCharge);
-
-			PointChargeCommand command = PointChargeCommand.builder()
-				.userId(userId)
-				.amount(amount)
-				.build();
-
-			PointInfo result = pointService.charge(command);
-
-			assertThat(result.amount()).isEqualTo(amount);
-		}
 
 		@Test
 		@DisplayName("[성공] 기존 회원의 포인트를 충전한다.")
@@ -116,30 +56,15 @@ class PointServiceTest {
 			long userId = 3L;
 			long amount = 3000;
 
-			User user = new User(userId, "tester");
+			Point userPoint = Point.of(1000L, userId);
 
-			Point userPoint = Point.builder()
-				.user(user)
-				.amount(1000)
-				.build();
-
-			Point afterCharge = Point.builder()
-				.user(user)
-				.amount(amount+1000)
-				.build();
-
-			when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 			when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(userPoint));
-			when(pointRepository.update(any(Point.class))).thenReturn(afterCharge);
 
-			PointChargeCommand command = PointChargeCommand.builder()
-				.userId(userId)
-				.amount(amount)
-				.build();
+			PointCommand.Charge command = PointCommand.Charge.of(userId, amount);
 
-			PointInfo result = pointService.charge(command);
+			PointInfo.Point result = pointService.charge(command);
 
-			assertThat(result.amount()).isEqualTo(4000);
+			assertThat(result.getAmount()).isEqualTo(4000);
 		}
 	}
 
@@ -154,32 +79,16 @@ class PointServiceTest {
 			long amount = 3000L;
 
 		  // when
+		  // 사용자가 2000원 보유하고 있는데
+			when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(Point.of(2000L, userId)));
+
+			// 3000원 사용했을 경우
+			PointCommand.Use command = PointCommand.Use.of(userId, amount);
 
 		  // then
-			assertThatThrownBy(() -> pointService.use(PointUseCommand.builder()
-				.userId(userId)
-				.amount(amount)
-				.build()
-			)).isInstanceOf(NotEnoughPointException.class);
-		}
-		
-		@Test
-		@DisplayName("[실패] 포인트를 충전하려는 사용자 정보가 없으면 예외발생")
-		void use_notFoundUser_exception() {
-			
-		  // given
-			long userId = 4L;
-			long amount = 3000L;
-
-		  // when
-			when(userRepository.findById(userId)).thenReturn(Optional.empty());
-		
-		  // then
-			assertThatThrownBy(() -> pointService.use(PointUseCommand.builder()
-				.userId(userId)
-				.amount(amount)
-				.build()
-			)).isInstanceOf(NotFoundUserException.class);
+			// 예외발생
+			assertThatThrownBy(() -> pointService.use(command))
+				.isInstanceOf(NotEnoughPointException.class);
 		}
 
 		@Test
@@ -189,27 +98,14 @@ class PointServiceTest {
 		  // given
 			long userId = 4L;
 			long amount = 500L;
-			User user = new User(userId, "tester");
-
-			Point userPoint = Point.builder()
-				.user(user)
-				.amount(1000)
-				.build();
+			PointCommand.Use command = PointCommand.Use.of(userId, amount);
 
 		  // when
-			when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-			when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(userPoint));
-
+			when(pointRepository.findByUserId(anyLong())).thenReturn(Optional.of(Point.of(1000L, userId)));
 
 			// then
-			PointInfo result = pointService.use(
-				PointUseCommand.builder()
-					.userId(userId)
-					.amount(amount)
-					.build()
-			);
-
-			assertThat(result.amount()).isEqualTo(500);
+			PointInfo.Point result = pointService.use(command);
+			assertThat(result.getAmount()).isEqualTo(500);
 		}
 	}
 }

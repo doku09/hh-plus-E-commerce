@@ -9,20 +9,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
 @AllArgsConstructor @NoArgsConstructor
 public class Point {
 
 	public static final Long MAX_POINT = 10_000_000L;
 	public static final Long ZERO_POINT = 0L;
 
-	private long id;
+	private Long id;
 
-	private long amount;
+	private Long amount;
 
-	private User user;
+	private Long userId;
 
-	public void charge(long amount) {
+	public void charge(Long amount) {
 		if(this.amount + amount > MAX_POINT) {
 			throw new MaxPointException();
 		}
@@ -31,11 +30,21 @@ public class Point {
 	}
 
 	// TODO QUESTION) 더티체킹을 도메인 클래스에서 하는게 맞을까요?
-	public void use(long amount) {
+	public void use(Long amount) {
 		if(this.amount - amount < 0) {
 			throw new NotEnoughPointException();
 		}
 
 		this.amount = this.amount - amount;
+	}
+
+	// 생성자
+	private Point(Long amount, Long userId) {
+		this.amount = amount;
+		this.userId = userId;
+	}
+
+	public static Point of(Long amount, Long userId) {
+		return new Point(amount, userId);
 	}
 }
