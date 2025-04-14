@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.order;
 
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -9,35 +10,26 @@ public class OrderCommand {
 
 	@Getter
 	public static class Create {
-		private final long userId;
+		private final Long userId;
 		private OrderStatus orderStatus;
 		private List<OrderItem> orderItems;
+		private Long totalPrice;
+		@Nullable private Long couponId;
+		private Long discountPrice;
 
-		private Create(long userId, List<OrderItem> orderItems) {
+		private Create(Long userId,Long couponId, List<OrderItem> orderItems) {
 			this.orderStatus = OrderStatus.ORDERED;
 			this.userId = userId;
+			this.couponId = couponId;
 			this.orderItems = orderItems;
 		}
 
-		private Create(long userId) {
-			this.userId = userId;
-			this.orderStatus = OrderStatus.ORDERED;
+		public static Create of(Long userId,Long couponId, List<OrderItem> orderItems) {
+			return new Create(userId, couponId, orderItems);
 		}
 
-		public static Create of(long userId, List<OrderItem> orderItems) {
-			return new Create(userId, orderItems);
-		}
-
-		public static Create of(long userId) {
-			return new Create(userId, new ArrayList<>());
-		}
-
-		public void addItem(OrderItem orderItem) {
-			this.orderItems.add(orderItem);
-		}
-
-		public void changeStatus(OrderStatus orderStatus) {
-			this.orderStatus = orderStatus;
+		public static Create of(Long userId, Long couponId) {
+			return new Create(userId, couponId, new ArrayList<>());
 		}
 	}
 
@@ -55,6 +47,10 @@ public class OrderCommand {
 
 		public static OrderItem of(long productId, int productPrice, int quantity) {
 			return new OrderItem(productId, productPrice, quantity);
+		}
+
+		public int getTotalPrice() {
+			return productPrice * quantity;
 		}
 	}
 }

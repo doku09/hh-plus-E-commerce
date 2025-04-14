@@ -10,19 +10,19 @@ public class OrderInfo {
 	@Getter
 	public static class Order {
 
-		private long id;
-		private int totalPrice;
+		private Long id;
+		private Long totalPrice;
 		private OrderStatus status;
-		private long userId;
+		private Long userId;
 		private LocalDateTime createdAt;
 
-		private Order(long id, int totalPrice, OrderStatus status) {
+		private Order(Long id, Long totalPrice, OrderStatus status) {
 			this.id = id;
 			this.totalPrice = totalPrice;
 			this.status = status;
 		}
 
-		public static OrderInfo.Order of(long id, int totalPrice, OrderStatus status) {
+		public static OrderInfo.Order of(Long id, Long totalPrice, OrderStatus status) {
 			return new Order(id,totalPrice,status);
 		}
 	}

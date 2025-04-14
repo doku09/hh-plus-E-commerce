@@ -33,18 +33,19 @@ class OrderServiceTest {
 		// given
 		long userId = 1L;
 
-		OrderCommand.Create order = OrderCommand.Create.of(userId);
+		Order order = Order.createOrder(userId);
 
 		// 세가지 종류의 아이템을 추가. 총합: 12000원
-		order.addItem(OrderCommand.OrderItem.of(1L,3000,2));
-		order.addItem(OrderCommand.OrderItem.of(2L,2000,2));
-		order.addItem(OrderCommand.OrderItem.of(3L,1000,2));
+		order.addItem(OrderItem.of(1L,3000,2));
+		order.addItem(OrderItem.of(2L,2000,2));
+		order.addItem(OrderItem.of(3L,1000,2));
 
 		// when
 		OrderInfo.Order result = orderService.order(order);
 
 		// then
 		verify(orderRepository,times(1)).save(any());
+
 		assertThat(result.getTotalPrice()).isEqualTo(12000);
 	}
 }

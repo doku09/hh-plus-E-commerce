@@ -9,7 +9,6 @@ public class OrderItem {
 	private Long productId;
 	private int productPrice;
 	private int quantity;
-	private int totalPrice;
 	private Order order;
 
 	private OrderItem(Long productId, int productPrice, int quantity,  int totalPrice) {
@@ -24,6 +23,10 @@ public class OrderItem {
 	}
 
 	public int getItemsPrice() {
+		return productPrice * quantity;
+	}
+
+	public int getTotalPrice() {
 		return productPrice * quantity;
 	}
 

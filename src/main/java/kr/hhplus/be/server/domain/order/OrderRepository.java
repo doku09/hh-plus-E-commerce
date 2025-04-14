@@ -4,5 +4,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderRepository {
-	public void save(Order order);
+	void save(Order order);
 }
