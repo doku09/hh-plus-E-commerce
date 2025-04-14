@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class User extends BaseTimeEntity {
 
 	private long id;
-
 	private String username;
 
 	public User(long id, String username) {
