@@ -11,7 +11,9 @@ public interface CouponRepository {
 
 	Optional<Coupon> findCouponById(long id);
 
-	void issueCoupon(IssuedCoupon issuedCoupon);
+	void issueCoupon(UserCoupon userCoupon);
 
-	List<IssuedCoupon> findIssuedCouponByUserId(long id);
+	List<UserCoupon> findIssuedCouponByUserId(long id);
+
+	UserCoupon findIssuedCouponByUserIdAndCouponId(Long userId, Long couponId);
 }

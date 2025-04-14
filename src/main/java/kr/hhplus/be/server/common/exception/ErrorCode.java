@@ -11,7 +11,8 @@ public enum ErrorCode {
 	NOT_FOUND_STOCK("상품 재고가 존재하지 않습니다.",HttpStatus.NOT_FOUND),
 	NOT_ENOUGH_STOCK("상품 재고가 충분하지 않습니다.",HttpStatus.BAD_REQUEST),
 	NOT_ENOUGH_COUPON("쿠폰 수량이 초과되었습니다.", HttpStatus.BAD_REQUEST),
-	ALREADY_ISSUED_COUPON("이미 발급된 쿠폰입니다.", HttpStatus.BAD_REQUEST);
+	ALREADY_ISSUED_COUPON("이미 발급된 쿠폰입니다.", HttpStatus.BAD_REQUEST),
+	ALREADY_USED_COUPON("이미 사용된 쿠폰입니다.", HttpStatus.BAD_REQUEST);
 
 
 	ErrorCode(String message, HttpStatus httpStatus) {

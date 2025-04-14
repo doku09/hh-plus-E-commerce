@@ -2,14 +2,12 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
-import kr.hhplus.be.server.domain.user.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -36,7 +34,9 @@ class CouponServiceTest {
 	void make_unlimited_coupon() {
 
 	  // given
-		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, 0, CouponType.LIMITED, startDate, endDate);
+		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate);
+
+		when(couponRepository.saveCoupon(any())).thenReturn(Coupon.create("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate));
 
 		//when
 		CouponInfo.Coupon result = couponService.register(command);
@@ -54,9 +54,9 @@ class CouponServiceTest {
 		long userId = 1L;
 		long couponId = 1L;
 
-		Coupon coupon = Coupon.create("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT,0,CouponType.LIMITED, startDate, endDate);
+		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,0,CouponType.LIMITED, startDate, endDate);
 
-		IssueCouponCommand.Issue issueCommand = IssueCouponCommand.Issue.of(userId, couponId);
+		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
 
 		//when
 
@@ -76,9 +76,9 @@ class CouponServiceTest {
 		long userId = 1L;
 		long couponId = 1L;
 
-		Coupon coupon = Coupon.create("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT,2,CouponType.LIMITED, startDate, endDate);
+		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate);
 
-		IssueCouponCommand.Issue issueCommand = IssueCouponCommand.Issue.of(userId, couponId);
+		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
 
 		//when
 		when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));
