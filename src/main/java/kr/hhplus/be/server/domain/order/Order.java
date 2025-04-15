@@ -1,23 +1,37 @@
 package kr.hhplus.be.server.domain.order;
 
+import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.BaseTimeEntity;
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO QUESTION Getter 지양인데 OrderResponse를 바인딩해줘야되는데 만들어야 할까요?
 @Getter
+@Entity
+@NoArgsConstructor
+@Table(name = "orders")
 public class Order extends BaseTimeEntity {
 
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "order_id")
 	private Long id;
+
 	private long totalPrice;
+
 	private Long discountPrice;
+
+	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
-	private final Long userId;
+
+	private Long userId;
+
 	private Long couponId;
+
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderItem> orderItems = new ArrayList<>();
 
 	public Order(Long userId) {

@@ -1,5 +1,9 @@
 package kr.hhplus.be.server.domain.coupon;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import lombok.Getter;
@@ -7,15 +11,18 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
+@Entity
 public class Coupon {
 
-	private final String name;
-//	private final DiscountPolicy discountPolicy;
-	private final Long discountPrice;
-	private final CouponType couponType;
-	private final LocalDateTime useStartDate;
-	private final LocalDateTime expiredDate;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
+	private String name;
+//	private final DiscountPolicy discountPolicy;
+	private Long discountPrice;
+	private CouponType couponType;
+	private LocalDateTime useStartDate;
+	private LocalDateTime expiredDate;
 	private int quantity;
 
 	public Coupon(long id, String name, Long discountPrice, Integer quantity, CouponType couponType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
@@ -35,6 +42,10 @@ public class Coupon {
 		this.quantity = quantity;
 		this.useStartDate = useStartDate;
 		this.expiredDate = expiredDate;
+	}
+
+	public Coupon() {
+
 	}
 
 	public static Coupon create(String name, Long discountPrice, Integer quantity, CouponType coupontType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
