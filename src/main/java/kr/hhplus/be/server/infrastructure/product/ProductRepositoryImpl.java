@@ -1,34 +1,31 @@
 package kr.hhplus.be.server.infrastructure.product;
 
-
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductStock;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-public class ProductMemoryRepository implements ProductRepository {
+@RequiredArgsConstructor
+@Repository
+public class ProductRepositoryImpl implements ProductRepository {
 
-	public Map<Long, Product> productTable = new HashMap<>();
-	private long sequence = 0;
-
+	private final ProductJpaRepository productJpaRepository;
 	@Override
 	public void save(Product product) {
-		productTable.put(sequence,product);
+		productJpaRepository.save(product);
 	}
 
 	@Override
 	public void saveStock(ProductStock stock) {
-		stock.setId(sequence);
+
 	}
 
 	@Override
 	public Optional<Product> findById(long id) {
-		return Optional.of(productTable.get(id));
+		return Optional.empty();
 	}
 
 	@Override
