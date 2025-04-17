@@ -15,10 +15,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CouponServiceTest {
+class CouponServiceUnitTest {
 
 	 private LocalDateTime startDate = LocalDateTime.now().minusDays(10);
 	 private LocalDateTime endDate = LocalDateTime.now().plusDays(30);
@@ -86,6 +87,29 @@ class CouponServiceTest {
 
 		//then
 		assertThat(coupon.getQuantity()).isEqualTo(1);
+	}
 
+	@Test
+	@DisplayName("[성공] 쿠폰을 사용한다.")
+	void useCoupon() {
+
+	  // given
+		long userId = 1L;
+		long couponId = 1L;
+		long discountPrice = 1000L;
+		int quantity = 2;
+		String couponName = "깜짝쿠폰";
+		CouponCommand.Use use = CouponCommand.Use.of(userId, couponId);
+		UserCoupon issuedCoupon = UserCoupon.createIssuedCoupon(userId, couponId);
+
+		// when
+		when(couponRepository.findCouponById(anyLong())).thenReturn(Optional.of(Coupon.create(couponName, discountPrice, quantity, CouponType.LIMITED, startDate, endDate)));
+		when(couponRepository.findIssuedCouponByUserIdAndCouponId(anyLong(), anyLong())).thenReturn(Optional.of(issuedCoupon));
+
+		CouponInfo.Coupon coupon = couponService.useCoupon(use);
+
+		// then
+		assertThat(coupon.getName()).isEqualTo(couponName);
+		assertThat(issuedCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 	}
 }
