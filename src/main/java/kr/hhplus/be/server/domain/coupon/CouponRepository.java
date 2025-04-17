@@ -1,7 +1,5 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -10,9 +8,9 @@ public interface CouponRepository {
 
 	Optional<Coupon> findCouponById(long id);
 
-	void issueCoupon(UserCoupon userCoupon);
+	void saveUserCoupon(UserCoupon userCoupon);
 
-	List<UserCoupon> findIssuedCouponByUserId(long id);
+	List<UserCoupon> findUserCouponByUserId(long userId);
 
-	UserCoupon findIssuedCouponByUserIdAndCouponId(Long userId, Long couponId);
+	Optional<UserCoupon> findIssuedCouponByUserIdAndCouponId(Long userId, Long couponId);
 }
