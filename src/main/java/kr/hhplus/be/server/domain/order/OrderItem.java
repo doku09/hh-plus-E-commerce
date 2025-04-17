@@ -13,29 +13,27 @@ public class OrderItem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	private Long productId;
-	private int productPrice;
+	private Long productPrice;
+	private Long totalPrice;
 	private int quantity;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "order_id")
 	private Order order;
 
 
-	private OrderItem(Long productId, int productPrice, int quantity,  int totalPrice) {
+	private OrderItem(Long productId, Long productPrice, int quantity,  Long totalPrice) {
 		this.productId = productId;
 		this.productPrice = productPrice;
 		this.quantity = quantity;
+		this.totalPrice = totalPrice;
 	}
 
-	public static OrderItem of(Long productId,int productPrice, int quantity) {
-		int totalPrice = productPrice * quantity;
+	public static OrderItem of(Long productId,Long productPrice, int quantity) {
+		Long totalPrice = productPrice * quantity;
 		return new OrderItem(productId,productPrice, quantity, totalPrice);
 	}
 
-	public int getItemsPrice() {
-		return productPrice * quantity;
-	}
-
-	public int getTotalPrice() {
+	public Long getTotalPrice() {
 		return productPrice * quantity;
 	}
 

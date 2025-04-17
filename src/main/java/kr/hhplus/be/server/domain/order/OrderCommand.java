@@ -17,40 +17,53 @@ public class OrderCommand {
 		@Nullable private Long couponId;
 		private Long discountPrice;
 
-		private Create(Long userId,Long couponId, List<OrderItem> orderItems) {
+		private Create(Long userId,Long couponId,Long discountPrice, List<OrderItem> orderItems) {
 			this.orderStatus = OrderStatus.ORDERED;
 			this.userId = userId;
+			this.discountPrice = discountPrice;
 			this.couponId = couponId;
 			this.orderItems = orderItems;
 		}
 
-		public static Create of(Long userId,Long couponId, List<OrderItem> orderItems) {
-			return new Create(userId, couponId, orderItems);
-		}
-
-		public static Create of(Long userId, Long couponId) {
-			return new Create(userId, couponId, new ArrayList<>());
+		public static Create of(Long userId,Long couponId,Long discountPrice, List<OrderItem> orderItems) {
+			return new Create(userId, couponId,discountPrice, orderItems);
 		}
 	}
 
 	@Getter
 	public static class OrderItem {
-		private final long productId;
-		private final int productPrice;
+		private final Long productId;
+		private final Long productPrice;
 		private final int quantity;
 
-		private OrderItem(long productId, int productPrice, int quantity) {
+		private OrderItem(Long productId, Long productPrice, int quantity) {
 			this.productPrice = productPrice;
 			this.productId = productId;
 			this.quantity = quantity;
 		}
 
-		public static OrderItem of(long productId, int productPrice, int quantity) {
+		public static OrderItem of(Long productId, Long productPrice, int quantity) {
 			return new OrderItem(productId, productPrice, quantity);
 		}
 
-		public int getTotalPrice() {
+		public Long getTotalPrice() {
 			return productPrice * quantity;
 		}
 	}
+
+	@Getter
+	public static class TopOrderedProducts {
+		private List<Long> orderIds;
+		private Integer limit;
+
+		private TopOrderedProducts(List<Long> orderIds,Integer limit) {
+			this.orderIds = orderIds;
+			this.limit = limit;
+		}
+
+		public static TopOrderedProducts of(List<Long> orderIds,Integer limit) {
+			return new TopOrderedProducts(orderIds, limit);
+		}
+	}
+
 }

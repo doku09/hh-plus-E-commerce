@@ -23,10 +23,6 @@ public class OrderCriteria {
 		public static CreateOrder of(long userId, Long couponId, List<OrderItem> orderProducts) {
 			return new CreateOrder(userId,couponId, orderProducts);
 		}
-
-		public OrderCommand.Create toCommand() {
-			return OrderCommand.Create.of(userId,couponId);
-		}
 	}
 
 	@Getter

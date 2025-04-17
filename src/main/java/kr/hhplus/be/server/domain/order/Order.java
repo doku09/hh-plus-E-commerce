@@ -35,6 +35,7 @@ public class Order extends BaseTimeEntity {
 	private List<OrderItem> orderItems = new ArrayList<>();
 
 	public Order(Long userId) {
+		this.status = OrderStatus.ORDERED;
 		this.userId = userId;
 	}
 
@@ -42,9 +43,12 @@ public class Order extends BaseTimeEntity {
 		return new Order(userId);
 	}
 
-	public void applyCoupon(Coupon coupon) {
-		this.couponId = coupon.getId();
-		this.discountPrice -= coupon.getDiscountPrice();
+	public void applyCoupon(Long couponId,Long discountPrice) {
+		if(this.couponId != null) {
+			this.couponId = couponId;
+			// 할인가격이 최종가격 discount가 0이면 그냥 totalPrice
+			this.discountPrice = totalPrice - discountPrice;
+		}
 	}
 
 	public void addItem(OrderItem orderItem) {
