@@ -6,6 +6,7 @@ import kr.hhplus.be.server.domain.product.ProductStock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -20,16 +21,21 @@ public class ProductRepositoryImpl implements ProductRepository {
 
 	@Override
 	public void saveStock(ProductStock stock) {
-
+		productJpaRepository.saveStock(stock);
 	}
 
 	@Override
 	public Optional<Product> findById(long id) {
-		return Optional.empty();
+		return productJpaRepository.findById(id);
 	}
 
 	@Override
 	public Optional<ProductStock> findStockByProductId(long id) {
-		return Optional.empty();
+		return productJpaRepository.findStockByProductId(id);
+	}
+
+	@Override
+	public List<Product> findProductsByIds(List<Long> list) {
+		return productJpaRepository.findAllByIds(list);
 	}
 }

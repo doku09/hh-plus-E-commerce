@@ -13,4 +13,6 @@ public interface ProductRepository {
 	Optional<Product> findById(long id);
 
 	Optional<ProductStock> findStockByProductId(long id);
+
+	List<Product> findProductsByIds(List<Long> list);
 }
