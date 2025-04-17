@@ -11,23 +11,19 @@ public class OrderCriteria {
 	@Getter
 	public static class CreateOrder {
 		private List<OrderItem> orderItems;
-		private long userId;
+		private Long userId;
+		private Long couponId;
 
-		public CreateOrder(long userId, List<OrderItem> orderItems) {
+		public CreateOrder(long userId,Long couponId, List<OrderItem> orderItems) {
 			this.userId = userId;
+			this.couponId = couponId;
 			this.orderItems = orderItems;
 		}
 
-		public static CreateOrder of(long userId, List<OrderItem> orderProducts) {
-			return new CreateOrder(userId, orderProducts);
-		}
-
-		public OrderCommand.Create toCommand() {
-			return OrderCommand.Create.of(userId);
+		public static CreateOrder of(long userId, Long couponId, List<OrderItem> orderProducts) {
+			return new CreateOrder(userId,couponId, orderProducts);
 		}
 	}
-
-
 
 	@Getter
 	public static class OrderItem {

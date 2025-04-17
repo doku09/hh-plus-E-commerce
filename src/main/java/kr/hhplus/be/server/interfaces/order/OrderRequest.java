@@ -11,6 +11,7 @@ public class OrderRequest {
 	public static class CreateOrder {
 		private Long userId;
 		List<OrderItem> orderItems;
+		private Long couponId;
 
 		private CreateOrder(Long userId, List<OrderItem> orderItems) {
 			this.userId = userId;
@@ -22,7 +23,7 @@ public class OrderRequest {
 		}
 
 		public OrderCriteria.CreateOrder toCriteria() {
-			return new OrderCriteria.CreateOrder(userId, orderItems.stream().map(OrderItem::toCriteria).toList());
+			return new OrderCriteria.CreateOrder(userId,couponId, orderItems.stream().map(OrderItem::toCriteria).toList());
 		}
 	}
 

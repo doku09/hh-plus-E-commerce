@@ -1,49 +1,63 @@
 package kr.hhplus.be.server.domain.order;
 
-import kr.hhplus.be.server.common.exception.NotFoundUserException;
+import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.BaseTimeEntity;
-import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.coupon.Coupon;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-//TODO QUESTION Getter 지양인데 OrderResponse를 바인딩해줘야되는데 만들어야 할까요?
 @Getter
+@Entity
+@NoArgsConstructor
+@Table(name = "orders")
 public class Order extends BaseTimeEntity {
 
-	private long id;
-	private final int totalPrice;
-	private final OrderStatus status;
-	private final Long userId;
-	private List<OrderItem> orderItems;
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "order_id")
+	private Long id;
 
-	private Order(int totalPrice, Long userId, OrderStatus orderStatus, LocalDateTime createdAt) {
-		this.totalPrice = totalPrice;
+	private long totalPrice;
+
+	private Long discountPrice;
+
+	@Enumerated(EnumType.STRING)
+	private OrderStatus status;
+
+	private Long userId;
+
+	private Long couponId;
+
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<OrderItem> orderItems = new ArrayList<>();
+
+	public Order(Long userId) {
+		this.status = OrderStatus.ORDERED;
 		this.userId = userId;
-		this.status = orderStatus;
-		super.createdAt = createdAt;
 	}
 
-	public static int getTotalPrice(List<OrderItem> orderItems) {
-		return orderItems.stream()
-			.mapToInt(OrderItem::getItemsPrice)
-			.sum();
+	public static Order createOrder(Long userId) {
+		return new Order(userId);
 	}
 
-	public static Order createOrder(Long userId, List<OrderItem> orderItems) {
-
-		// orderItems를 돌면서 주문의 총합을 계산한다.
-		int totalPrice = getTotalPrice(orderItems);
-
-		// orderItem에 order를 바인딩해주기 위해 생성한다.
-		Order order = new Order(totalPrice, userId, OrderStatus.ORDERED, LocalDateTime.now());
-
-		// 루프를 돌면서 order를 할당
-		for (OrderItem item : orderItems) {
-			item.assignOrder(order);
+	public void applyCoupon(Long couponId,Long discountPrice) {
+		if(this.couponId != null) {
+			this.couponId = couponId;
+			// 할인가격이 최종가격 discount가 0이면 그냥 totalPrice
+			this.discountPrice = totalPrice - discountPrice;
 		}
+	}
 
-		return order;
+	public void addItem(OrderItem orderItem) {
+		this.orderItems.add(orderItem);
+		orderItem.assignOrder(this);
+		totalPrice += orderItem.getTotalPrice();
+	}
+
+	public void changeStatus(OrderStatus orderStatus) {
+		this.status = orderStatus;
 	}
 }

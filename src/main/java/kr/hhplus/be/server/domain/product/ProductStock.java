@@ -1,30 +1,34 @@
 package kr.hhplus.be.server.domain.product;
 
 
+import jakarta.persistence.*;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
+@Getter
+@Entity
 public class ProductStock {
 
-	@Setter
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	private int quantity;
+	@OneToOne
+	@JoinColumn(name = "product_id")
 	private Product product;
 
-	public ProductStock(int quantity, Product product) {
+	public ProductStock(Product product,int quantity) {
 		this.quantity = quantity;
 		this.product = product;
 	}
 
-	public static ProductStock createInit(Product product) {
-		int INIT_VALUE = 0;
-		return new ProductStock(INIT_VALUE,product);
+	public static ProductStock createInit(Product product, int quantity) {
+		return new ProductStock(product,quantity);
 	}
 
-	//TODO 테스트
 	public void deduct(int amount) {
 		if(this.quantity - amount < 0) throw new GlobalBusinessException(ErrorCode.NOT_ENOUGH_STOCK);
 

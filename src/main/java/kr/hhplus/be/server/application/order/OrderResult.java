@@ -10,18 +10,20 @@ public class OrderResult {
 	@Getter
 	public static class Order {
 
-		private long id;
-		private int totalPrice;
+		private Long id;
+		private Long totalPrice;
+		private Long discountPrice;
 		private OrderStatus orderStatus;
 
-		private Order(long id, int totalPrice, OrderStatus orderStatus) {
+		private Order(Long id, Long totalPrice, Long discountPrice, OrderStatus orderStatus) {
 			this.id = id;
 			this.totalPrice = totalPrice;
+			this.discountPrice = discountPrice;
 			this.orderStatus = orderStatus;
 		}
 
-		public static Order of(long id, int totalPrice, OrderStatus orderStatus) {
-			return new Order(id,totalPrice,orderStatus);
+		public static Order of(Long id, Long totalPrice, Long discountPrice, OrderStatus orderStatus) {
+			return new Order(id,totalPrice, discountPrice, orderStatus);
 		}
 	}
 

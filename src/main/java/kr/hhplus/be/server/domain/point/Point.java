@@ -1,5 +1,9 @@
 package kr.hhplus.be.server.domain.point;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import kr.hhplus.be.server.common.exception.MaxPointException;
 import kr.hhplus.be.server.common.exception.NotEnoughPointException;
 import kr.hhplus.be.server.domain.user.User;
@@ -10,11 +14,14 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor @NoArgsConstructor
+@Entity
 public class Point {
 
 	public static final Long MAX_POINT = 10_000_000L;
 	public static final Long ZERO_POINT = 0L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	private Long amount;

@@ -2,17 +2,25 @@ package kr.hhplus.be.server.application.order;
 
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
-import kr.hhplus.be.server.domain.order.OrderCommand;
-import kr.hhplus.be.server.domain.order.OrderInfo;
-import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.order.OrderStatus;
+import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponCommand;
+import kr.hhplus.be.server.domain.coupon.CouponInfo;
+import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.order.*;
+import kr.hhplus.be.server.domain.payment.PaymentCommand;
+import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.point.PointCommand;
+import kr.hhplus.be.server.domain.point.PointService;
+import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.product.ProductStockCommand;
-import kr.hhplus.be.server.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 
 @Component
@@ -21,31 +29,45 @@ public class OrderFacade {
 
 	private final OrderService orderService;
 	private final ProductService productService;
+	private final PointService pointService;
+	private final CouponService couponService;
+	private final PaymentService paymentService;
 
 	@Transactional
 	public OrderResult.Order order(OrderCriteria.CreateOrder criteria) {
-		OrderCommand.Create orderCreateCommand = criteria.toCommand();
+		// 재고 조회
+		List<ProductCommand.OrderProduct> orderProducts = criteria.getOrderItems().stream()
+			.map(oi -> ProductCommand.OrderProduct.of(
+				oi.getProductId(), oi.getQuantity())
+			)
+			.toList();
 
-		// 주문아이템 (상품정보, 개수) 루프 돌면서 저장 후 Order 저장
-		for (OrderCriteria.OrderItem orderProduct : criteria.getOrderItems()) {
-			ProductInfo.Product product = productService.findById(orderProduct.getProductId());
+		ProductInfo.OrderProducts products = productService.deductStock(ProductCommand.OrderProducts.of(orderProducts));
 
-			//주문아이템 생성
-			orderCreateCommand.addItem(OrderCommand.OrderItem.of(product.getId(),product.getPrice(), orderProduct.getQuantity()));
+		// 쿠폰 사용
+		CouponInfo.Coupon coupon = couponService.useCoupon(CouponCommand.Use.of(criteria.getUserId(), criteria.getCouponId()));
 
-			//주문 재고 차감 -> 재고 부족 시 주문상태 변경
-			try {
-				productService.deductStock(ProductStockCommand.Deduct.of(product.getId(), orderProduct.getQuantity()));
-			} catch (GlobalBusinessException e) {
-				if (e.getMessage().equals(ErrorCode.NOT_ENOUGH_STOCK.getMessage())) {
-					//상품 재고에 문제있을 경우 주문 상태 "취소"로 변경
-					orderCreateCommand.changeStatus(OrderStatus.CANCELED);
-				}
-			}
-		}
+		// 주문 생성
+		List<OrderCommand.OrderItem> orderItems = products.getOrderProducts().stream().map(op -> OrderCommand.OrderItem.of(
+			op.getProductId(),
+			op.getProductPrice(),
+			op.getQuantity()
+		)).toList();
 
-		OrderInfo.Order orderInfo = orderService.order(orderCreateCommand);
+		//주문
+		OrderInfo.Order orderInfo = orderService.createOrder(OrderCommand.Create.of(
+			criteria.getUserId(),
+			coupon.getId(),
+			coupon.getDiscountPrice(),
+			orderItems)
+		);
 
-		return OrderResult.Order.of(orderInfo.getId(),orderInfo.getTotalPrice(),orderInfo.getStatus());
+		// 포인트 차감
+		pointService.use(PointCommand.Use.of(criteria.getUserId(), orderInfo.getTotalPrice()));
+
+		// 결제정보 입력
+		paymentService.pay(PaymentCommand.Create.of(orderInfo.getId(), orderInfo.getDiscountPrice()));
+
+		return OrderResult.Order.of(orderInfo.getId(), orderInfo.getTotalPrice(), orderInfo.getDiscountPrice(), orderInfo.getStatus());
 	}
 }

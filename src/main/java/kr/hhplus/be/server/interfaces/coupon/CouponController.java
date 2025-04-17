@@ -21,7 +21,7 @@ public class CouponController {
 
 		CouponCommand.Create command = CouponCommand.Create.of(
 			request.getName(),
-			request.getDiscountPolicy(),
+			request.getDiscountPrice(),
 			request.getQuantity(),
 			request.getCouponType(),
 			request.getUseStartDate(),
