@@ -7,45 +7,37 @@ import jakarta.persistence.Id;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@NoArgsConstructor
 public class Coupon {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	private String name;
-//	private final DiscountPolicy discountPolicy;
 	private Long discountPrice;
 	private CouponType couponType;
 	private LocalDateTime useStartDate;
 	private LocalDateTime expiredDate;
 	private int quantity;
 
-	public Coupon(long id, String name, Long discountPrice, Integer quantity, CouponType couponType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
-		this.id = id;
-		this.name = name;
-		this.couponType = couponType;
-		this.quantity = quantity;
-		this.discountPrice = discountPrice;
-		this.useStartDate = useStartDate;
-		this.expiredDate = expiredDate;
-	}
+	private Coupon(String name, Long discountPrice, Integer quantity, CouponType couponType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
 
-	public Coupon(String name, Long discountPrice, Integer quantity, CouponType couponType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
-		this.name = name;
-		this.discountPrice = discountPrice;
-		this.couponType = couponType;
-		this.quantity = quantity;
-		this.useStartDate = useStartDate;
-		this.expiredDate = expiredDate;
-	}
+		if(couponType == CouponType.LIMITED && quantity <= 0) {
+			throw new GlobalBusinessException(ErrorCode.INVALID_COUPON_QUANTITY);
+		}
 
-	public Coupon() {
-
+		 this.name = name;
+		 this.discountPrice = discountPrice;
+		 this.couponType = couponType;
+		 this.quantity = quantity;
+		 this.useStartDate = useStartDate;
+		 this.expiredDate = expiredDate;
 	}
 
 	public static Coupon create(String name, Long discountPrice, Integer quantity, CouponType coupontType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
@@ -53,9 +45,6 @@ public class Coupon {
 		return new Coupon(name, discountPrice, quantity, coupontType, useStartDate, expiredDate);
 	}
 
-	public static Coupon of(Long id, String name, Long discountPrice, Integer quantity, CouponType coupontType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
-		return new Coupon(id, name, discountPrice, quantity, coupontType, useStartDate, expiredDate);
-	}
 
 	public boolean canIssue() {
 		return couponType == CouponType.INFINITE || quantity > 0;
@@ -66,6 +55,13 @@ public class Coupon {
 			throw new GlobalBusinessException(ErrorCode.NOT_ENOUGH_COUPON);
 		}
 
-		quantity--;
+		if (couponType == CouponType.LIMITED) {
+			if (quantity < 0) {
+				throw new GlobalBusinessException(ErrorCode.NOT_ENOUGH_COUPON);
+			}
+
+			quantity--;
+		}
+
 	}
 }

@@ -13,7 +13,6 @@ public class CouponInfo {
 		private String name;
 		private LocalDateTime useStartDate;
 		private LocalDateTime expiredDate;
-//		private DiscountPolicy policy;
 		private Long discountPrice;
 		private int quantity;
 		private CouponType couponType;
@@ -21,14 +20,25 @@ public class CouponInfo {
 		private Coupon(Long id,String name, Long discountPrice, CouponType couponType,LocalDateTime useStartDate, LocalDateTime expiredDate) {
 			this.name = name;
 			this.couponType = couponType;
-			this.quantity = quantity;
 			this.useStartDate = useStartDate;
 			this.expiredDate = expiredDate;
 		}
 
-		public static Coupon of(Long id,String name,Long discountPrice, LocalDateTime useStartDate, LocalDateTime expiredDate,CouponType couponType) {
+		private Coupon(Long id, String name, int quantity, Long discountPrice) {
+			this.id = id;
+			this.name = name;
+			this.quantity = quantity;
+			this.discountPrice = discountPrice;
+		}
+
+		public static Coupon of(Long id, String name, Long discountPrice, LocalDateTime useStartDate, LocalDateTime expiredDate, CouponType couponType) {
 			return new Coupon(id,name,discountPrice, couponType, useStartDate, expiredDate);
 		}
+
+		public static Coupon info(Long id, String name, int quantity, Long discountPrice) {
+			return new Coupon(id,name,quantity, discountPrice);
+		}
+
 	}
 
 

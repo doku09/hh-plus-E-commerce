@@ -33,13 +33,13 @@ public class CouponService {
 		return couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 	}
 
-	public void issueCoupon(IssuedCouponCommand.Issue command) {
+	public CouponInfo.Coupon issueCoupon(IssuedCouponCommand.Issue command) {
 
 		Coupon findCoupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 
-		// TODO QUESTION) 어디를 도메인으로 뺴야할까요?
-		List<UserCoupon> userCouponIds = couponRepository.findIssuedCouponByUserId(command.getUserId());
+		List<UserCoupon> userCouponIds = couponRepository.findUserCouponByUserId(command.getUserId());
 
+		// 쿠폰을 이미 가지고있는지 검사
 		boolean hasCoupon = userCouponIds.stream().anyMatch(userCoupon -> userCoupon.isSameCoupon(command.getCouponId()));
 
 		if (hasCoupon) {
@@ -50,7 +50,9 @@ public class CouponService {
 
 		UserCoupon userCoupon = UserCoupon.createIssuedCoupon(command.getUserId(), command.getCouponId());
 
-		couponRepository.issueCoupon(userCoupon);
+		couponRepository.saveUserCoupon(userCoupon);
+
+		return CouponInfo.Coupon.info(findCoupon.getId(), findCoupon.getName(), findCoupon.getQuantity(), findCoupon.getDiscountPrice());
 	}
 
 	public CouponInfo.Coupon useCoupon(CouponCommand.Use useCouponCommand) {
@@ -58,13 +60,9 @@ public class CouponService {
 		Coupon coupon = couponRepository.findCouponById(useCouponCommand.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 
 		// 사용 상태로 변경
-		UserCoupon userCoupon = couponRepository.findIssuedCouponByUserIdAndCouponId(useCouponCommand.getUserId(), useCouponCommand.getCouponId());
+		UserCoupon userCoupon = couponRepository.findIssuedCouponByUserIdAndCouponId(useCouponCommand.getUserId(), useCouponCommand.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_HAVE_COUPON));
 
-		if(userCoupon.isUsed()) {
-			throw new GlobalBusinessException(ErrorCode.ALREADY_USED_COUPON);
-		}
-
-		userCoupon.used();
+		userCoupon.use();
 
 		// 쿠폰 정보 반환하여
 		return CouponInfo.Coupon.of(
