@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
-import org.springframework.stereotype.Repository;
+import kr.hhplus.be.server.domain.productStock.ProductStock;
 
 import java.util.List;
 import java.util.Optional;

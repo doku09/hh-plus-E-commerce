@@ -1,12 +1,12 @@
-package kr.hhplus.be.server.domain.product;
+package kr.hhplus.be.server.domain.productStock;
 
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
+import kr.hhplus.be.server.domain.product.Product;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
 @Getter

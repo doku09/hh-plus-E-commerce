@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.infrastructure.product;
 
 import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductStock;
+import kr.hhplus.be.server.domain.productStock.ProductStock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
