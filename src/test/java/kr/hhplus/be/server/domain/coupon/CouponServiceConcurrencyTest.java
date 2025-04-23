@@ -66,51 +66,6 @@ public class CouponServiceConcurrencyTest {
 		assertThat(issued).hasSize(1); // 발급된 UserCoupon 수
 	}
 
-	@Test
-	@DisplayName("[실패] 선착순 쿠폰이 있을때 여러 사용자가 동시에 접근하면 쿠폰수량 이상")
-	void issue_coupon_concurrency_fail () throws InterruptedException {
-
-		// given
-		for (int i = 0; i < 10; i++) {
-			userRepository.save(User.create("테스터"));
-		}
-
-		List<User> users = userRepository.findAll();
-
-		Coupon coupon = couponRepository.saveCoupon(Coupon.create(
-			"선착순 쿠폰", 1000L, 10,CouponType.LIMITED,
-			LocalDateTime.now(), LocalDateTime.now().plusDays(7)
-		));
-
-		long couponId = coupon.getId();
-
-		// when
-		ExecutorService executorService = Executors.newFixedThreadPool(10);
-		CountDownLatch latch = new CountDownLatch(10);
-		AtomicInteger successCount = new AtomicInteger();
-		for (int i = 0; i < 10; i++) {
-			UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(couponId, users.get(i).getId());
-			executorService.submit(() -> {
-				try {
-					couponService.issueCoupon(issueCommand);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
-
-			latch.countDown();
-			successCount.incrementAndGet();
-		}
-		latch.await();
-
-
-		// then
-		List<UserCoupon> issued = couponRepository.findAllUserCoupon();
-		Coupon findCoupon = couponRepository.findCouponById(couponId).orElse(null);
-
-		assertThat(successCount.get()).isEqualTo(10);
-		assertThat(issued.size()).isNotEqualTo(successCount);
-	}
 	
 	@Test
 	@DisplayName("[성공] 선착순 쿠폰이 있을때 여러 사용자가 동시에 접근해도 비관적 락을 사용하여 정상적으로 발급한다.")
@@ -151,9 +106,10 @@ public class CouponServiceConcurrencyTest {
 
 		// then
 		List<UserCoupon> issued = couponRepository.findAllUserCoupon();
-		couponRepository.findCouponById(couponId).orElse(null);
+		Coupon findCoupon = couponRepository.findCouponById(couponId).orElse(null);
 
 		assertThat(successCount.get()).isEqualTo(10);
 		assertThat(issued.size()).isEqualTo(successCount.get());
+		assertThat(findCoupon.getQuantity()).isEqualTo(10 - successCount.get());
 	}
 }
