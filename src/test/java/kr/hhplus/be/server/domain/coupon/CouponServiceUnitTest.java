@@ -57,7 +57,7 @@ class CouponServiceUnitTest {
 
 		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,0,CouponType.LIMITED, startDate, endDate);
 
-		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(userId, couponId);
 
 		//when
 
@@ -79,7 +79,7 @@ class CouponServiceUnitTest {
 
 		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate);
 
-		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(userId, couponId);
 
 		//when
 		when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));

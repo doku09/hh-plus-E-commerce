@@ -2,7 +2,7 @@ package kr.hhplus.be.server.domain.coupon;
 
 import lombok.Getter;
 
-public class IssuedCouponCommand {
+public class UserCouponCommand {
 
 	@Getter
 	public static class Issue {

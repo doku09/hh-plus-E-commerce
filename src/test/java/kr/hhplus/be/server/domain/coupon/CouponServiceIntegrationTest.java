@@ -61,7 +61,7 @@ public class CouponServiceIntegrationTest {
 		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate);
 		couponRepository.saveCoupon(coupon);
 
-		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(userId, couponId);
 
 		//when
 		CouponInfo.Coupon issuedCoupon = couponService.issueCoupon(issueCommand);
@@ -83,7 +83,7 @@ public class CouponServiceIntegrationTest {
 		Coupon saveCoupon = Coupon.create(couponName, 1000L,2,CouponType.LIMITED, startDate, endDate);
 		couponRepository.saveCoupon(saveCoupon);
 		// 쿠폰 발행
-		couponService.issueCoupon(IssuedCouponCommand.Issue.of(tester.getId(), couponId));
+		couponService.issueCoupon(UserCouponCommand.Issue.of(tester.getId(), couponId));
 		//쿠폰 사용
 		CouponCommand.Use use = CouponCommand.Use.of(tester.getId(), couponId);
 		CouponInfo.Coupon coupon = couponService.useCoupon(use);
