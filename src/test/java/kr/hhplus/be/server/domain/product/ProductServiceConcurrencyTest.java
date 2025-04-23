@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.product;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import kr.hhplus.be.server.common.exception.OptimisticLockingRetryException;
 import kr.hhplus.be.server.concurrent.ConcurrencyExecutor;
 import kr.hhplus.be.server.domain.productStock.ProductStock;
 import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
@@ -38,6 +39,8 @@ public class ProductServiceConcurrencyTest {
 	void concurrency_deduct_stock() {
 
 	  // given
+
+		// 상품 5개 생성
 		ProductCommand.Create command = ProductCommand.Create.of("다진고기", 1000L, 5);
 
 		Product product = Product.create(command.getName(),command.getPrice());
@@ -51,12 +54,13 @@ public class ProductServiceConcurrencyTest {
 		// when
 		AtomicInteger successCount = new AtomicInteger();
 
+		// 동시에 3개의 스레드가 하나씩 재고 차감시도
 		executor.execute(()->{
 		try {
 			productService.deductStock(stockCommand);
 			successCount.incrementAndGet();
 		} catch (ObjectOptimisticLockingFailureException e) {
-			System.out.println("충돌 발생: " + e.getMessage());
+			throw new OptimisticLockingRetryException();
 		}},3);
 
 		ProductStock stock = stockRepository.findByProductId(product.getId());
