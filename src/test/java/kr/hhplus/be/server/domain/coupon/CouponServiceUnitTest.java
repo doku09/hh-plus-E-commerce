@@ -2,14 +2,12 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
-import kr.hhplus.be.server.domain.user.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -17,10 +15,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CouponServiceTest {
+class CouponServiceUnitTest {
 
 	 private LocalDateTime startDate = LocalDateTime.now().minusDays(10);
 	 private LocalDateTime endDate = LocalDateTime.now().plusDays(30);
@@ -36,7 +35,9 @@ class CouponServiceTest {
 	void make_unlimited_coupon() {
 
 	  // given
-		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT, 0, CouponType.LIMITED, startDate, endDate);
+		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate);
+
+		when(couponRepository.saveCoupon(any())).thenReturn(Coupon.create("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate));
 
 		//when
 		CouponInfo.Coupon result = couponService.register(command);
@@ -54,9 +55,9 @@ class CouponServiceTest {
 		long userId = 1L;
 		long couponId = 1L;
 
-		Coupon coupon = Coupon.create("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT,0,CouponType.LIMITED, startDate, endDate);
+		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,0,CouponType.LIMITED, startDate, endDate);
 
-		IssueCouponCommand.Issue issueCommand = IssueCouponCommand.Issue.of(userId, couponId);
+		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
 
 		//when
 
@@ -76,9 +77,9 @@ class CouponServiceTest {
 		long userId = 1L;
 		long couponId = 1L;
 
-		Coupon coupon = Coupon.create("깜짝쿠폰", DiscountPolicy.FIXED_AMOUNT,2,CouponType.LIMITED, startDate, endDate);
+		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate);
 
-		IssueCouponCommand.Issue issueCommand = IssueCouponCommand.Issue.of(userId, couponId);
+		IssuedCouponCommand.Issue issueCommand = IssuedCouponCommand.Issue.of(userId, couponId);
 
 		//when
 		when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));
@@ -86,6 +87,29 @@ class CouponServiceTest {
 
 		//then
 		assertThat(coupon.getQuantity()).isEqualTo(1);
+	}
 
+	@Test
+	@DisplayName("[성공] 쿠폰을 사용한다.")
+	void useCoupon() {
+
+	  // given
+		long userId = 1L;
+		long couponId = 1L;
+		long discountPrice = 1000L;
+		int quantity = 2;
+		String couponName = "깜짝쿠폰";
+		CouponCommand.Use use = CouponCommand.Use.of(userId, couponId);
+		UserCoupon issuedCoupon = UserCoupon.createIssuedCoupon(userId, couponId);
+
+		// when
+		when(couponRepository.findCouponById(anyLong())).thenReturn(Optional.of(Coupon.create(couponName, discountPrice, quantity, CouponType.LIMITED, startDate, endDate)));
+		when(couponRepository.findIssuedCouponByUserIdAndCouponId(anyLong(), anyLong())).thenReturn(Optional.of(issuedCoupon));
+
+		CouponInfo.Coupon coupon = couponService.useCoupon(use);
+
+		// then
+		assertThat(coupon.getName()).isEqualTo(couponName);
+		assertThat(issuedCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 	}
 }

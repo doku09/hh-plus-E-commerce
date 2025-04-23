@@ -2,9 +2,7 @@ package kr.hhplus.be.server.domain.coupon;
 
 import lombok.Getter;
 
-import java.time.LocalDateTime;
-
-public class IssueCouponCommand {
+public class IssuedCouponCommand {
 
 	@Getter
 	public static class Issue {

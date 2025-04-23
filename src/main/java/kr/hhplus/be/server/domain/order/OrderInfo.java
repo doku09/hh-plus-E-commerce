@@ -4,26 +4,30 @@ package kr.hhplus.be.server.domain.order;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class OrderInfo {
 
 	@Getter
 	public static class Order {
 
-		private long id;
-		private int totalPrice;
+		private Long id;
+		private Long totalPrice;
+		private Long discountPrice;
+
 		private OrderStatus status;
-		private long userId;
+		private Long userId;
 		private LocalDateTime createdAt;
 
-		private Order(long id, int totalPrice, OrderStatus status) {
+		private Order(Long id, Long totalPrice, Long discountPrice, OrderStatus status) {
 			this.id = id;
 			this.totalPrice = totalPrice;
+			this.discountPrice = discountPrice;
 			this.status = status;
 		}
 
-		public static OrderInfo.Order of(long id, int totalPrice, OrderStatus status) {
-			return new Order(id,totalPrice,status);
+		public static OrderInfo.Order of(Long id, Long totalPrice,Long discountPrice, OrderStatus status) {
+			return new Order(id,totalPrice,discountPrice, status);
 		}
 	}
 
@@ -42,6 +46,20 @@ public class OrderInfo {
 
 		public OrderInfo.OrderItem of(String productName, int productPrice, int quantity, int totalPrice) {
 			return new OrderItem(productName,productPrice,quantity,totalPrice);
+		}
+	}
+
+
+	@Getter
+	public static class TopOrder {
+		private List<PopularOrder> popularOrders;
+
+		private TopOrder(List<PopularOrder> popularOrders) {
+			this.popularOrders = popularOrders;
+		}
+
+		public static TopOrder of(List<PopularOrder> popularOrders) {
+			return new TopOrder(popularOrders);
 		}
 	}
 }

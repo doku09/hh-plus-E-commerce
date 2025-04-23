@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.user;
 
 
+import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.BaseTimeEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +10,12 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@Entity
+@Table(name="users")
 public class User extends BaseTimeEntity {
 
-	private long id;
-
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 	private String username;
 
 	public User(long id, String username) {

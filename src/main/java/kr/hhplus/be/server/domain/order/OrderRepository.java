@@ -1,8 +1,9 @@
 package kr.hhplus.be.server.domain.order;
 
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-@Repository
 public interface OrderRepository {
-	public void save(Order order);
+	void save(Order order);
+
+	List<OrderItem> findAllOrderItemsByIds(List<Long> orderIds);
 }

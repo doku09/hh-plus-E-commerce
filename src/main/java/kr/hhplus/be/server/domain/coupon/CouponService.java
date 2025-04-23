@@ -15,15 +15,16 @@ public class CouponService {
 
 	// 쿠폰 등록
 	public CouponInfo.Coupon register(CouponCommand.Create command) {
-		Coupon coupon = Coupon.create(command.getName(), command.getDiscountPolicy(), command.getQuantity(),command.getCouponType() ,command.getUseStartDate(), command.getExpiredDate());
+		Coupon coupon = Coupon.create(command.getName(), command.getDiscountPrice(), command.getQuantity(),command.getCouponType() ,command.getUseStartDate(), command.getExpiredDate());
 
 		Coupon savedCoupon = couponRepository.saveCoupon(coupon);
 
 		return CouponInfo.Coupon.of(
+				savedCoupon.getId(),
 				savedCoupon.getName(),
+				savedCoupon.getDiscountPrice(),
 				savedCoupon.getUseStartDate(),
 				savedCoupon.getExpiredDate(),
-				savedCoupon.getQuantity(),
 				savedCoupon.getCouponType()
 		);
 	}
@@ -32,13 +33,14 @@ public class CouponService {
 		return couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 	}
 
-	public void issueCoupon(IssueCouponCommand.Issue command) {
+	public CouponInfo.Coupon issueCoupon(IssuedCouponCommand.Issue command) {
 
 		Coupon findCoupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 
-		List<IssuedCoupon> userCouponIds = couponRepository.findIssuedCouponByUserId(command.getUserId());
+		List<UserCoupon> userCouponIds = couponRepository.findUserCouponByUserId(command.getUserId());
 
-		boolean hasCoupon = userCouponIds.stream().anyMatch(issuedCoupon -> issuedCoupon.getCouponId() == command.getCouponId());
+		// 쿠폰을 이미 가지고있는지 검사
+		boolean hasCoupon = userCouponIds.stream().anyMatch(userCoupon -> userCoupon.isSameCoupon(command.getCouponId()));
 
 		if (hasCoupon) {
 			throw new GlobalBusinessException(ErrorCode.ALREADY_ISSUED_COUPON);
@@ -46,8 +48,30 @@ public class CouponService {
 
 		findCoupon.issue();
 
-		IssuedCoupon issuedCoupon = IssuedCoupon.createIssuedCoupon(command.getUserId(), command.getCouponId());
+		UserCoupon userCoupon = UserCoupon.createIssuedCoupon(command.getUserId(), command.getCouponId());
 
-		couponRepository.issueCoupon(issuedCoupon);
+		couponRepository.saveUserCoupon(userCoupon);
+
+		return CouponInfo.Coupon.info(findCoupon.getId(), findCoupon.getName(), findCoupon.getQuantity(), findCoupon.getDiscountPrice());
+	}
+
+	public CouponInfo.Coupon useCoupon(CouponCommand.Use useCouponCommand) {
+		// 사용할 수 있는 쿠폰인지 검사
+		Coupon coupon = couponRepository.findCouponById(useCouponCommand.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
+
+		// 사용 상태로 변경
+		UserCoupon userCoupon = couponRepository.findIssuedCouponByUserIdAndCouponId(useCouponCommand.getUserId(), useCouponCommand.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_HAVE_COUPON));
+
+		userCoupon.use();
+
+		// 쿠폰 정보 반환하여
+		return CouponInfo.Coupon.of(
+			coupon.getId(),
+			coupon.getName(),
+			coupon.getDiscountPrice(),
+			coupon.getUseStartDate(),
+			coupon.getExpiredDate(),
+			coupon.getCouponType()
+		);
 	}
 }

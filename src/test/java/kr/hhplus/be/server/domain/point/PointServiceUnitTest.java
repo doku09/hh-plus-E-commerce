@@ -2,9 +2,6 @@ package kr.hhplus.be.server.domain.point;
 
 import kr.hhplus.be.server.common.exception.MaxPointException;
 import kr.hhplus.be.server.common.exception.NotEnoughPointException;
-import kr.hhplus.be.server.common.exception.NotFoundUserException;
-import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PointServiceTest {
+class PointServiceUnitTest {
 
 	@Mock
 	private PointRepository pointRepository;

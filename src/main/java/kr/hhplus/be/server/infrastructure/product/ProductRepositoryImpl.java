@@ -1,45 +1,41 @@
 package kr.hhplus.be.server.infrastructure.product;
 
-
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductStock;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Repository
-public class ProductMemoryRepository implements ProductRepository {
+public class ProductRepositoryImpl implements ProductRepository {
 
-	public Map<Long, Product> productTable = new HashMap<>();
-	private long sequence = 0;
-
+	private final ProductJpaRepository productJpaRepository;
 	@Override
 	public void save(Product product) {
-		product.setId(sequence);
-		productTable.put(sequence,product);
+		productJpaRepository.save(product);
 	}
 
 	@Override
 	public void saveStock(ProductStock stock) {
-		stock.setId(sequence);
+		productJpaRepository.saveStock(stock);
 	}
 
 	@Override
 	public Optional<Product> findById(long id) {
-		return Optional.of(productTable.get(id));
-	}
-
-	@Override
-	public Optional<List<Product>> findByIds(List<String> productIds) {
-		return Optional.empty();
+		return productJpaRepository.findById(id);
 	}
 
 	@Override
 	public Optional<ProductStock> findStockByProductId(long id) {
-		return Optional.empty();
+		return productJpaRepository.findStockByProductId(id);
+	}
+
+	@Override
+	public List<Product> findProductsByIds(List<Long> list) {
+		return productJpaRepository.findAllByIds(list);
 	}
 }
