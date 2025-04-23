@@ -3,6 +3,8 @@ package kr.hhplus.be.server.domain.product;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import kr.hhplus.be.server.common.exception.NegativePriceException;
+import kr.hhplus.be.server.domain.productStock.ProductStock;
+import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,8 @@ class ProductServiceUnitTest {
 	private ProductService productService;
 	@Mock
 	private ProductRepository productRepository;
+	@Mock
+	private ProductStockRepository stockRepository;
 
 	@Test
 	@DisplayName("[실패] 상품등록 시 상품명을 입력하지 않으면 예외를 던진다.")
@@ -67,7 +71,7 @@ class ProductServiceUnitTest {
 
 	  // then
 		verify(productRepository,atLeast(1)).save(any(Product.class));
-		verify(productRepository,atLeast(1)).saveStock(any(ProductStock.class));
+		verify(stockRepository,atLeast(1)).save(any(ProductStock.class));
 	}
 
 	@ParameterizedTest
@@ -84,15 +88,15 @@ class ProductServiceUnitTest {
 		Product product1 = new Product(1L, "커피", 3000L);
 
 		// 두개다 5개씩밖에없음
-		ProductStock stock1 = new ProductStock(product1,5); // 수량 10개
+		ProductStock stock1 = new ProductStock(product1.getId(),5); // 수량 10개
 
 		ProductCommand.OrderProducts command = ProductCommand.OrderProducts.of(orderProducts);
 
 		// when
-		when(productRepository.findStockByProductId(1L)).thenReturn(Optional.of(stock1));
+		when(stockRepository.findByProductId(1L)).thenReturn(stock1);
 
 		// then
-		assertThatThrownBy(() -> productService.deductStock(command))
+		assertThatThrownBy(() -> productService.deductOrderItemsStock(command))
 			.isInstanceOf(GlobalBusinessException.class)
 			.hasMessage(ErrorCode.NOT_ENOUGH_STOCK.getMessage());
 	}
@@ -113,17 +117,17 @@ class ProductServiceUnitTest {
 		Product product1 = new Product(1L, "커피", 3000L);
 		Product product2 = new Product(2L, "커피", 3000L);
 
-		ProductStock stock1 = new ProductStock(product1,5);
-		ProductStock stock2 = new ProductStock(product2,5);
+		ProductStock stock1 = new ProductStock(product1.getId(),5);
+		ProductStock stock2 = new ProductStock(product2.getId(),5);
 
 		// 1번 2번 5개씩 존재
-		when(productRepository.findStockByProductId(1L)).thenReturn(Optional.of(stock1));
-		when(productRepository.findStockByProductId(2L)).thenReturn(Optional.of(stock2));
+		when(stockRepository.findByProductId(1L)).thenReturn(stock1);
+		when(stockRepository.findByProductId(2L)).thenReturn(stock2);
 
 		//
 		when(productRepository.findById(1L)).thenReturn(Optional.of(product1));
 		when(productRepository.findById(2L)).thenReturn(Optional.of(product2));
-		ProductInfo.OrderProducts products = productService.deductStock(orderProducts);
+		ProductInfo.OrderProducts products = productService.deductOrderItemsStock(orderProducts);
 
 
 	  // then

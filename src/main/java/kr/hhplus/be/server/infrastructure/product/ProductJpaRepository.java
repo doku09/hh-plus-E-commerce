@@ -12,14 +12,6 @@ import java.util.Optional;
 
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
 
-	@Modifying
-	@Query(value = "INSERT INTO product_stock (product_id, stock) VALUES (:productId, :stock)", nativeQuery = true)
-	void saveStock(ProductStock stock);
-
-	@Query(value = "SELECT * FROM product_stock WHERE product_id = :productId", nativeQuery = true)
-	Optional<ProductStock> findStockByProductId(@Param("productId") Long productId);
-
-
 	@Query("SELECT p FROM Product p WHERE p.id IN :ids")
 	List<Product> findAllByIds(@Param("ids") List<Long> ids);
 }

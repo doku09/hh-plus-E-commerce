@@ -52,4 +52,19 @@ public class ProductCommand {
 			return new OrderProduct(productId, quantity);
 		}
 	}
+
+	@Getter
+	public static class DeductStock {
+		private Long productId;
+		private int quantity;
+
+		public DeductStock(Long productId, int quantity) {
+			this.productId = productId;
+			this.quantity = quantity;
+		}
+
+		public static DeductStock of(Long productId, int quantity) {
+			return new DeductStock(productId, quantity);
+		}
+	}
 }

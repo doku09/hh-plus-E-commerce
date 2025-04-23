@@ -1,9 +1,17 @@
 package kr.hhplus.be.server.domain.product;
 
+import jakarta.persistence.OptimisticLockException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
+import kr.hhplus.be.server.domain.productStock.ProductStock;
+import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.StaleObjectStateException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +21,9 @@ import java.util.List;
 public class ProductService {
 
 	private final ProductRepository productRepository;
+	private final ProductStockRepository stockRepository;
 
+	@Transactional
 	public ProductInfo.Product register(ProductCommand.Create command) {
 
 		Product product = Product.create(
@@ -21,10 +31,10 @@ public class ProductService {
 			command.getPrice()
 		);
 
-		ProductStock stock = ProductStock.createInit(product,command.getQuantity());
 
 		productRepository.save(product);
-		productRepository.saveStock(stock);
+		ProductStock stock = ProductStock.createInit(product.getId(),command.getQuantity());
+		ProductStock savedStock = stockRepository.save(stock);
 
 		return ProductInfo.Product.of(
 			product.getId(),
@@ -37,7 +47,6 @@ public class ProductService {
 
 		Product product = productRepository.findById(id).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_PRODUCT));
 
-		// TODO QUESTION 객체지향 생활체조에서 도메인에는 Getter,Setter를 지양하라고 했는데 이렇게 DTO를 만들어야할경우에는 어떻게 해야할까요?
 		return ProductInfo.Product.of(
 			product.getId(),
 			product.getName(),
@@ -45,12 +54,12 @@ public class ProductService {
 		);
 	}
 
-	public ProductInfo.OrderProducts deductStock(ProductCommand.OrderProducts orderProducts) {
+	public ProductInfo.OrderProducts deductOrderItemsStock(ProductCommand.OrderProducts orderProducts) {
 
 		List<ProductInfo.OrderProduct> orderProductList = new ArrayList<>();
 
 		for (ProductCommand.OrderProduct orderProduct : orderProducts.getOrderProducts()) {
-			ProductStock productStock = productRepository.findStockByProductId(orderProduct.getProductId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_STOCK));
+			ProductStock productStock = stockRepository.findByProductId(orderProduct.getProductId());
 
 			// 재고 차감
 			productStock.deduct(orderProduct.getQuantity());
@@ -68,5 +77,19 @@ public class ProductService {
 		List<ProductInfo.Product> resultInfo = products.stream().map(product -> ProductInfo.Product.of(product.getId(), product.getName(), product.getPrice())).toList();
 
 		return ProductInfo.TopProducts.of(resultInfo);
+	}
+
+	/**
+	 * 상품 재고를 차감한다.
+	 */
+	@Retryable(retryFor = {
+		OptimisticLockException.class,
+		StaleObjectStateException.class,
+		ObjectOptimisticLockingFailureException.class
+	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
+	@Transactional
+	public void deductStock(ProductCommand.DeductStock command) {
+		ProductStock stock = stockRepository.findByProductId(command.getProductId());
+		stock.deduct(command.getQuantity());
 	}
 }
