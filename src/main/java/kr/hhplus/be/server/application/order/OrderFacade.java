@@ -14,13 +14,11 @@ import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
-import kr.hhplus.be.server.domain.product.ProductStockCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Component
@@ -42,10 +40,17 @@ public class OrderFacade {
 			)
 			.toList();
 
-		ProductInfo.OrderProducts products = productService.deductStock(ProductCommand.OrderProducts.of(orderProducts));
+		ProductInfo.OrderProducts products = productService.deductOrderItemsStock(ProductCommand.OrderProducts.of(orderProducts));
 
 		// 쿠폰 사용
-		CouponInfo.Coupon coupon = couponService.useCoupon(CouponCommand.Use.of(criteria.getUserId(), criteria.getCouponId()));
+		Long couponId = null;
+		Long discountPrice = 0L;
+		if(null != criteria.getCouponId()) {
+			CouponInfo.Coupon coupon  = couponService.useCoupon(CouponCommand.Use.of(criteria.getUserId(), criteria.getCouponId()));
+
+			couponId = coupon.getId();
+			discountPrice = coupon.getDiscountPrice();
+		}
 
 		// 주문 생성
 		List<OrderCommand.OrderItem> orderItems = products.getOrderProducts().stream().map(op -> OrderCommand.OrderItem.of(
@@ -57,8 +62,8 @@ public class OrderFacade {
 		//주문
 		OrderInfo.Order orderInfo = orderService.createOrder(OrderCommand.Create.of(
 			criteria.getUserId(),
-			coupon.getId(),
-			coupon.getDiscountPrice(),
+			couponId,
+			discountPrice,
 			orderItems)
 		);
 
