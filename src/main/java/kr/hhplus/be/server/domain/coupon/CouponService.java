@@ -4,6 +4,7 @@ import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,12 +34,17 @@ public class CouponService {
 		return couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 	}
 
-	public CouponInfo.Coupon issueCoupon(IssuedCouponCommand.Issue command) {
 
-		Coupon findCoupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
+	@Transactional
+	public CouponInfo.Coupon issueCoupon(UserCouponCommand.Issue command) {
+
+		// 비관적락 다른 쓰레드 대기
+		Coupon findCoupon = couponRepository.findByIdUpdate(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
+//		Coupon findCoupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 
 		List<UserCoupon> userCouponIds = couponRepository.findUserCouponByUserId(command.getUserId());
 
+		// 첫번째 요청 통과
 		// 쿠폰을 이미 가지고있는지 검사
 		boolean hasCoupon = userCouponIds.stream().anyMatch(userCoupon -> userCoupon.isSameCoupon(command.getCouponId()));
 
@@ -46,6 +52,7 @@ public class CouponService {
 			throw new GlobalBusinessException(ErrorCode.ALREADY_ISSUED_COUPON);
 		}
 
+		//첫번째 요청만 업데이트
 		findCoupon.issue();
 
 		UserCoupon userCoupon = UserCoupon.createIssuedCoupon(command.getUserId(), command.getCouponId());

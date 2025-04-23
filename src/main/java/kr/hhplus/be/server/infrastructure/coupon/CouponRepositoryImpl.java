@@ -3,7 +3,6 @@ package kr.hhplus.be.server.infrastructure.coupon;
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
-import kr.hhplus.be.server.domain.coupon.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -29,6 +28,11 @@ public class CouponRepositoryImpl implements CouponRepository {
 		return couponJpaRepository.findById(id);
 	}
 
+	@Override
+	public Optional<Coupon> findByIdUpdate(long id) {
+		return couponJpaRepository.findByIdUpdate(id);
+	}
+
 	// 쿠폰 발행
 	@Override
 	public void saveUserCoupon(UserCoupon userCoupon) {
@@ -45,5 +49,10 @@ public class CouponRepositoryImpl implements CouponRepository {
 	@Override
 	public Optional<UserCoupon> findIssuedCouponByUserIdAndCouponId(Long userId, Long couponId) {
 		return userCouponRepository.findByUserIdAndCouponId(userId, couponId);
+	}
+
+	@Override
+	public List<UserCoupon> findAllUserCoupon() {
+		return userCouponRepository.findAll();
 	}
 }
