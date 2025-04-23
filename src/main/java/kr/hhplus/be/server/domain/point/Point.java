@@ -1,12 +1,8 @@
 package kr.hhplus.be.server.domain.point;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import kr.hhplus.be.server.common.exception.MaxPointException;
 import kr.hhplus.be.server.common.exception.NotEnoughPointException;
-import kr.hhplus.be.server.domain.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,7 +22,11 @@ public class Point {
 
 	private Long amount;
 
+	@Column(nullable = false, updatable = false)
 	private Long userId;
+
+	@Version
+	private Long version;
 
 	public void charge(Long amount) {
 		if(this.amount + amount > MAX_POINT) {
@@ -36,7 +36,6 @@ public class Point {
 		this.amount = this.amount + amount;
 	}
 
-	// TODO QUESTION) 더티체킹을 도메인 클래스에서 하는게 맞을까요?
 	public void use(Long amount) {
 		if(this.amount - amount < 0) {
 			throw new NotEnoughPointException();
