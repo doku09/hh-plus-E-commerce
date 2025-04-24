@@ -1,12 +1,14 @@
 package kr.hhplus.be.server.domain.coupon;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 public class CouponRequest {
 
 	@Getter
+	@NoArgsConstructor
 	public static class Create {
 		private String name;
 		private Long discountPrice;

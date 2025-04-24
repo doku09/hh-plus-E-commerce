@@ -12,9 +12,9 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public GlobalBusinessException argumentNotValidException(MethodArgumentNotValidException e) {
+	public ResponseEntity<ErrorResult> argumentNotValidException(NotEnoughPointException e) {
 
-		return null;
+		return new ResponseEntity<>(new ErrorResult(e.getMessage(),HttpStatus.BAD_REQUEST),HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler

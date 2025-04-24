@@ -19,6 +19,7 @@ public class PointService {
 	/**
 	 * 사용자에게 포인트를 충전합니다.
 	 */
+	@Transactional
 	public PointInfo.Point charge(PointCommand.Charge command) {
 
 		Point point = pointRepository.findByUserId(command.getUserId()).orElseGet(

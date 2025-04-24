@@ -2,12 +2,14 @@ package kr.hhplus.be.server.interfaces.order;
 
 import kr.hhplus.be.server.application.order.OrderCriteria;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 public class OrderRequest {
 
 	@Getter
+	@NoArgsConstructor
 	public static class CreateOrder {
 		private Long userId;
 		List<OrderItem> orderItems;

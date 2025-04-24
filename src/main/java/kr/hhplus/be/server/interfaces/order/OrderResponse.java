@@ -2,9 +2,13 @@ package kr.hhplus.be.server.interfaces.order;
 
 import kr.hhplus.be.server.application.order.OrderResult;
 import kr.hhplus.be.server.domain.order.OrderStatus;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class OrderResponse {
 
+	@Getter
+	@NoArgsConstructor
 	public static class Order {
 
 			private Long id;

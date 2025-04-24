@@ -1,7 +1,10 @@
 package kr.hhplus.be.server.interfaces.user;
 
+import lombok.Getter;
+
 public class UserResponse {
 
+	@Getter
 	public static class User {
 		private Long id;
 		private String username;
