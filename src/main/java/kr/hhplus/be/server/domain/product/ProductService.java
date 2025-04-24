@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.product;
 
 import jakarta.persistence.OptimisticLockException;
+import kr.hhplus.be.server.common.TimeHelper;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import kr.hhplus.be.server.domain.productStock.ProductStock;
@@ -22,6 +23,7 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductStockRepository stockRepository;
+	private final TimeHelper timeHelper;
 
 	@Transactional
 	public ProductInfo.Product register(ProductCommand.Create command) {
@@ -54,11 +56,22 @@ public class ProductService {
 		);
 	}
 
+	/**
+	 * 상품 재고를 차감한다.
+	 */
+	@Retryable(retryFor = {
+		OptimisticLockException.class,
+		StaleObjectStateException.class,
+		ObjectOptimisticLockingFailureException.class
+	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
 	public ProductInfo.OrderProducts deductOrderItemsStock(ProductCommand.OrderProducts orderProducts) {
+
+		timeHelper.printTime();
 
 		List<ProductInfo.OrderProduct> orderProductList = new ArrayList<>();
 
 		for (ProductCommand.OrderProduct orderProduct : orderProducts.getOrderProducts()) {
+
 			ProductStock productStock = stockRepository.findByProductId(orderProduct.getProductId());
 
 			// 재고 차감
@@ -66,8 +79,14 @@ public class ProductService {
 
 			Product product = productRepository.findById(orderProduct.getProductId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_PRODUCT));
 
-			orderProductList.add(ProductInfo.OrderProduct.of(product.getId(), product.getName(), product.getPrice(), productStock.getQuantity()));
+			orderProductList.add(
+				ProductInfo.OrderProduct.of(product.getId(),
+				product.getName(),
+				product.getPrice(),
+				orderProduct.getQuantity())
+			);
 		}
+
 		return ProductInfo.OrderProducts.of(orderProductList);
 	}
 
@@ -82,11 +101,11 @@ public class ProductService {
 	/**
 	 * 상품 재고를 차감한다.
 	 */
-	@Retryable(retryFor = {
-		OptimisticLockException.class,
-		StaleObjectStateException.class,
-		ObjectOptimisticLockingFailureException.class
-	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
+//	@Retryable(retryFor = {
+//		OptimisticLockException.class,
+//		StaleObjectStateException.class,
+//		ObjectOptimisticLockingFailureException.class
+//	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
 	@Transactional
 	public void deductStock(ProductCommand.DeductStock command) {
 		ProductStock stock = stockRepository.findByProductId(command.getProductId());
