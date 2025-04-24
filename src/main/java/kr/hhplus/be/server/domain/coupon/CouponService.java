@@ -38,8 +38,10 @@ public class CouponService {
 	@Transactional
 	public CouponInfo.Coupon issueCoupon(UserCouponCommand.Issue command) {
 
-		// 비관적락 다른 쓰레드 대기
+		// 비관적락 조회
 		Coupon findCoupon = couponRepository.findByIdUpdate(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
+
+		// 락 없는 조회
 //		Coupon findCoupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 
 		List<UserCoupon> userCouponIds = couponRepository.findUserCouponByUserId(command.getUserId());

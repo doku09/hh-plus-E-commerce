@@ -22,6 +22,6 @@ public class PointController implements PointApi{
 	@PostMapping("/charge/{userId}")
 	public ResponseEntity<Long> charge(@PathVariable Long userId, PointRequest.Charge request) {
 		pointService.charge(request.toCommand(userId));
-		return null;
+		return ResponseEntity.ok().build();
 	}
 }
