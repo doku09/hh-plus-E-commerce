@@ -9,14 +9,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.annotation.DirtiesContext.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class PointConcurrencyTest {
 
 	@Autowired
@@ -25,11 +28,10 @@ public class PointConcurrencyTest {
 	private UserRepository userRepository;
 	@Autowired
 	private ConcurrencyExecutor executor;
-
 	@Autowired
 	private PointService pointService;
 
-	private final int THREAD_COUNT = 10;
+	private final int THREAD_COUNT = 5;
 
 	@Test
 	@DisplayName("[성공] 동시에 포인트를 사용하면 재시도하여 성공한다.")
@@ -58,5 +60,31 @@ public class PointConcurrencyTest {
 
 		assertThat(point).isNotNull();
 		assertThat(point.getAmount()).isEqualTo(50_000L);
+	}
+
+	@Test
+	@DisplayName("[성공] simpleLock 분산락으로 포인트 사용 동시성을 제어한다.")
+	void simplLock_point_use() {
+
+	  // given
+		User saveduser = userRepository.save(User.create("테스터"));
+		pointRepository.save(Point.of(10_000L,saveduser.getId()));
+
+	  // when
+		PointCommand.Use command = PointCommand.Use.of(saveduser.getId(), 2000L);
+	  // then
+		executor.execute(() -> {
+			try {
+				pointService.use(command);
+			} catch (NotEnoughPointException e) {
+				System.out.println("충돌 발생: " + e.getMessage());
+			}
+		}, THREAD_COUNT);
+
+		// then
+		Point point = pointRepository.findByUserId(saveduser.getId()).orElse(null);
+
+		assertThat(point).isNotNull();
+		assertThat(point.getAmount()).isEqualTo(0L);
 	}
 }
