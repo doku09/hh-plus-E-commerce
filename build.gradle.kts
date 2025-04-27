@@ -55,6 +55,9 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	//redis
+	implementation ("org.redisson:redisson-spring-boot-starter:3.23.4")
 }
 
 tasks.withType<Test> {
