@@ -15,7 +15,8 @@ public enum ErrorCode {
 	ALREADY_USED_COUPON("이미 사용된 쿠폰입니다.", HttpStatus.BAD_REQUEST),
 	NOT_HAVE_COUPON("해당 유저가 보유한 쿠폰이 아닙니다.", HttpStatus.BAD_REQUEST),
 	INVALID_COUPON_QUANTITY("수량제한이 있는 쿠폰은 1개 이상 등록할 수 있습니다.", HttpStatus.BAD_REQUEST),
-	NOT_OWNED_COUPON("보유한 쿠폰이 없습니다.", HttpStatus.BAD_REQUEST);
+	NOT_OWNED_COUPON("보유한 쿠폰이 없습니다.", HttpStatus.BAD_REQUEST),
+	NOT_FOUND_ORDER("주문이 존재하지 않습니다.", HttpStatus.BAD_REQUEST);
 
 
 	ErrorCode(String message, HttpStatus httpStatus) {
