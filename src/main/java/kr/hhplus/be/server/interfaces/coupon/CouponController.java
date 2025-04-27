@@ -6,6 +6,7 @@ import kr.hhplus.be.server.domain.coupon.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/coupon")
 public class CouponController {
 
-	private CouponService couponService;
+	private final CouponService couponService;
 
 	@PostMapping
-	public ResponseEntity<Void> register(CouponRequest.Create request) {
+	public ResponseEntity<Void> register(@RequestBody CouponRequest.Create request) {
 
 		CouponCommand.Create command = CouponCommand.Create.of(
 			request.getName(),
@@ -32,6 +33,4 @@ public class CouponController {
 
 		return ResponseEntity.ok().build();
 	}
-
-
 }

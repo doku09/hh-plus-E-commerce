@@ -1,32 +1,24 @@
 package kr.hhplus.be.server.domain.product;
 
-import kr.hhplus.be.server.common.exception.ErrorCode;
-import kr.hhplus.be.server.common.exception.GlobalBusinessException;
-import kr.hhplus.be.server.common.exception.NegativePriceException;
+import kr.hhplus.be.server.domain.productStock.ProductStock;
+import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class ProductServiceIntegrationTest {
 
 	@Autowired
 	private ProductService productService;
+	@Autowired
+	private ProductStockRepository stockRepository;
 	@Autowired
 	private ProductRepository productRepository;
 
@@ -68,13 +60,13 @@ class ProductServiceIntegrationTest {
 			ProductCommand.OrderProduct.of(p2.getId(), 5))
 		);
 
-		ProductStock productStock1 = productRepository.findStockByProductId(p1.getId()).orElse(null);
-		ProductStock productStock2 = productRepository.findStockByProductId(p2.getId()).orElse(null);
+		ProductStock productStock1 = stockRepository.findByProductId(p1.getId());
+		ProductStock productStock2 = stockRepository.findByProductId(p2.getId());
 
 		Product findProduct1 = productRepository.findById(p1.getId()).orElse(null);
 		Product findProduct2 = productRepository.findById(p2.getId()).orElse(null);
 
-		ProductInfo.OrderProducts products = productService.deductStock(orderProducts);
+		ProductInfo.OrderProducts products = productService.deductOrderItemsStock(orderProducts);
 
 	  // then
 		assertThat(products.getOrderProducts().get(0).getQuantity()).isEqualTo(5);

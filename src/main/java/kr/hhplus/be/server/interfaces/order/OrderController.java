@@ -5,6 +5,7 @@ import kr.hhplus.be.server.application.order.OrderResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +18,7 @@ public class OrderController implements OrderApi{
 
 	@Override
 	@PostMapping
-	public ResponseEntity<OrderResponse.Order> order(OrderRequest.CreateOrder request) {
+	public ResponseEntity<OrderResponse.Order> order(@RequestBody OrderRequest.CreateOrder request) {
 		OrderResult.Order ordered = orderFacade.order(request.toCriteria());
 		return ResponseEntity.ok(OrderResponse.Order.of(ordered.getId(),ordered.getTotalPrice(),ordered.getOrderStatus()));
 	}

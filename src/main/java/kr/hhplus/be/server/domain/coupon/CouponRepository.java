@@ -8,9 +8,14 @@ public interface CouponRepository {
 
 	Optional<Coupon> findCouponById(long id);
 
+	Optional<Coupon> findByIdUpdate(long id);
+
 	void saveUserCoupon(UserCoupon userCoupon);
 
 	List<UserCoupon> findUserCouponByUserId(long userId);
 
 	Optional<UserCoupon> findIssuedCouponByUserIdAndCouponId(Long userId, Long couponId);
+
+	List<UserCoupon> findAllUserCoupon();
+
 }

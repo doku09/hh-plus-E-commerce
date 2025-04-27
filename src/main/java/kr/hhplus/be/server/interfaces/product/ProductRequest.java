@@ -1,9 +1,13 @@
 package kr.hhplus.be.server.interfaces.product;
 
 import kr.hhplus.be.server.domain.product.ProductCommand;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class ProductRequest {
 
+	@Getter
+	@NoArgsConstructor
 	public static class Create {
 		private String name;
 		private Long price;

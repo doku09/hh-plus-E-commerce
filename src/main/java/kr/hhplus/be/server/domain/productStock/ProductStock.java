@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.product;
+package kr.hhplus.be.server.domain.productStock;
 
 
 import jakarta.persistence.*;
@@ -6,7 +6,6 @@ import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
@@ -15,18 +14,21 @@ public class ProductStock {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-	private int quantity;
-	@OneToOne
-	@JoinColumn(name = "product_id")
-	private Product product;
 
-	public ProductStock(Product product,int quantity) {
+	private int quantity;
+
+	@Version
+	private Long version;
+
+	private Long productId;
+
+	public ProductStock(Long productId,int quantity) {
 		this.quantity = quantity;
-		this.product = product;
+		this.productId = productId;
 	}
 
-	public static ProductStock createInit(Product product, int quantity) {
-		return new ProductStock(product,quantity);
+	public static ProductStock createInit(Long productId, int quantity) {
+		return new ProductStock(productId,quantity);
 	}
 
 	public void deduct(int amount) {

@@ -4,6 +4,7 @@ import kr.hhplus.be.server.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +18,7 @@ public class ProductController implements ProductApi{
 
 	@Override
 	@PostMapping
-	public ResponseEntity<Void> register(ProductRequest.Create request) {
+	public ResponseEntity<Void> register(@RequestBody ProductRequest.Create request) {
 
 		productService.register(request.toCommand());
 
