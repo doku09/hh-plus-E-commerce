@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -30,4 +31,16 @@ public class OrderRepositoryImpl implements OrderRepository {
 	public Order findById(Long orderId) {
 		return orderJpaRepository.findById(orderId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_ORDER));
 	}
+
+	@Override
+	public List<OrderItem> findOrderBeforeFiveMinutes() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime beforeFiveMinutes = now.minusMinutes(5);
+		List<Order> orders = orderJpaRepository.findOrderBeforeFiveMinutes(beforeFiveMinutes,now);
+
+		List<Long> orderIds = orders.stream().map(Order::getId).toList();
+		return orderJpaRepository.findAllOrderItemsByIds(orderIds);
+	}
+
+
 }

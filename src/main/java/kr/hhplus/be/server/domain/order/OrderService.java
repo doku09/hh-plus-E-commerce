@@ -62,4 +62,8 @@ public class OrderService {
 		//TODO: 구현 필요
 		dataFlatFormInterlock.sendToOrderInfo();
 	}
+
+	public List<OrderItem> getOrderBeforeFiveMiniutes() {
+		return orderRepository.findOrderBeforeFiveMinutes();
+	}
 }

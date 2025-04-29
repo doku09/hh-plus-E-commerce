@@ -8,4 +8,6 @@ public interface OrderRepository {
 	List<OrderItem> findAllOrderItemsByIds(List<Long> orderIds);
 
 	Order findById(Long orderId);
+
+	List<OrderItem> findOrderBeforeFiveMinutes();
 }
