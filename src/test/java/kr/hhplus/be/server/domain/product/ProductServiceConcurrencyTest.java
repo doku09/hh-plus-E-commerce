@@ -5,16 +5,20 @@ import kr.hhplus.be.server.common.exception.OptimisticLockingRetryException;
 import kr.hhplus.be.server.concurrent.ConcurrencyExecutor;
 import kr.hhplus.be.server.domain.productStock.ProductStock;
 import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @ActiveProfiles("test")
 @SpringBootTest
 public class ProductServiceConcurrencyTest {
@@ -31,8 +35,32 @@ public class ProductServiceConcurrencyTest {
 	@Autowired
 	private ConcurrencyExecutor executor;
 
-	@PersistenceContext
-	private EntityManager em;
+	@Test
+	@DisplayName("주문상품 차감 시 재고가 차감된다.")
+	void deduct_orderITems() {
+		Product product = Product.create("다진고기", 1000L);
+		productRepository.save(product);
+		productRepository.findById(product.getId()).orElseThrow();
+		stockRepository.save(ProductStock.createInit(product.getId(), 5));
+
+		ProductCommand.OrderProducts command = ProductCommand.OrderProducts.of(List.of(
+			ProductCommand.OrderProduct.of(product.getId(), 1)
+		));
+
+		executor.execute(()->{
+			try {
+				productService.deductOrderItemsStock(command);
+			} catch(Exception e) {
+				System.out.println("충돌!!");
+				System.out.println(e.getClass().getSimpleName());
+				throw e;
+			}
+		}, 3);
+
+		ProductStock stock = stockRepository.findByProductId(product.getId());
+
+		assertThat(stock.getQuantity()).isEqualTo(2);
+	}
 
 	@Test
 	@DisplayName("[성공] 동시에 재고차감 시 DB락으로 제어한다.")

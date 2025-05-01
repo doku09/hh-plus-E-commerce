@@ -2,8 +2,6 @@ package kr.hhplus.be.server.domain.order;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -57,20 +55,9 @@ public class OrderServiceIntegrationTest {
 		OrderCommand.TopOrderedProducts topOrderedProducts = OrderCommand.TopOrderedProducts.of(List.of(1L, 2L, 3L, 4L), limit);
 
 		// when
-		Order order1 = Order.createOrder(1L);
-		order1.addItem(OrderItem.of(22L, 1000L, 5));
-		order1.addItem(OrderItem.of(42L, 1000L, 5));
-		order1.addItem(OrderItem.of(67L, 1000L, 5));
-
-		Order order2 = Order.createOrder(2L);
-		order2.addItem(OrderItem.of(34L, 1000L, 5));
-		order2.addItem(OrderItem.of(34L, 1000L, 5));
-		order2.addItem(OrderItem.of(34L, 1000L, 5));
-
-		Order order3 = Order.createOrder(3L);
-		order3.addItem(OrderItem.of(22L, 1000L, 5));
-		order3.addItem(OrderItem.of(22L, 1000L, 5));
-		order3.addItem(OrderItem.of(22L, 1000L, 5));
+		Order order1 = OrderFixture.createOrderWithOrderItems(1L,OrderStatus.PAID);
+		Order order2 = OrderFixture.createOrderWithOrderItems(2L,OrderStatus.PAID);
+		Order order3 = OrderFixture.createOrderWithOrderItems(3L,OrderStatus.PAID);
 
 
 		orderRepository.save(order1);
@@ -86,5 +73,24 @@ public class OrderServiceIntegrationTest {
 		assertThat(topOrder.getPopularOrders().size()).isEqualTo(2);
 		assertThat(topOrder.getPopularOrders().get(0).getItemId()).isEqualTo(22L);
 		assertThat(topOrder.getPopularOrders().get(1).getItemId()).isEqualTo(34L);
+	}
+
+	@Test
+	@DisplayName("인기상품 조회를 위해 1시간전 주문된 상품을 가져온다.")
+	@Transactional
+	void getOrderBeforeFiveMiniutes() {
+
+	  // given
+		Order order1 = OrderFixture.createOrderWithOrderItems(1L,OrderStatus.PAID);
+		Order order2 = OrderFixture.createOrderWithOrderItems(2L,OrderStatus.PAID);
+		Order order3 = OrderFixture.createOrderWithOrderItems(3L,OrderStatus.PAID);
+
+		orderRepository.save(order1);
+		orderRepository.save(order2);
+		orderRepository.save(order3);
+	  // when
+		List<OrderItem> orders = orderService.getOrderBeforeHour(1);
+		// then
+		assertThat(orders.size()).isGreaterThan(1);
 	}
 }
