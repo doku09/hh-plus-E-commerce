@@ -9,5 +9,5 @@ public interface OrderRepository {
 
 	Order findById(Long orderId);
 
-	List<OrderItem> findOrderBeforeFiveMinutes();
+	List<OrderItem> getOrderBeforeHour(int hour);
 }

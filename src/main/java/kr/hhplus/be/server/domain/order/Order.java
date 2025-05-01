@@ -39,6 +39,11 @@ public class Order extends BaseTimeEntity {
 		this.userId = userId;
 	}
 
+	public Order(Long userId, OrderStatus status) {
+		this.userId = userId;
+		this.status = OrderStatus.PAID;
+	}
+
 	public static Order createOrder(Long userId) {
 		return new Order(userId);
 	}

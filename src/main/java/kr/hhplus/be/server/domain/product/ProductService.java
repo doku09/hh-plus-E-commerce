@@ -33,7 +33,6 @@ public class ProductService {
 			command.getPrice()
 		);
 
-
 		productRepository.save(product);
 		ProductStock stock = ProductStock.createInit(product.getId(),command.getQuantity());
 		ProductStock savedStock = stockRepository.save(stock);
@@ -45,15 +44,8 @@ public class ProductService {
 		);
 	}
 
-	public ProductInfo.Product findById(long id) {
-
-		Product product = productRepository.findById(id).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_PRODUCT));
-
-		return ProductInfo.Product.of(
-			product.getId(),
-			product.getName(),
-			product.getPrice()
-		);
+	public Product findById(long id) {
+		return productRepository.findById(id).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_PRODUCT));
 	}
 
 	/**
@@ -64,6 +56,7 @@ public class ProductService {
 		StaleObjectStateException.class,
 		ObjectOptimisticLockingFailureException.class
 	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
+	@Transactional
 	public ProductInfo.OrderProducts deductOrderItemsStock(ProductCommand.OrderProducts orderProducts) {
 
 		timeHelper.printTime();
@@ -101,11 +94,11 @@ public class ProductService {
 	/**
 	 * 상품 재고를 차감한다.
 	 */
-//	@Retryable(retryFor = {
-//		OptimisticLockException.class,
-//		StaleObjectStateException.class,
-//		ObjectOptimisticLockingFailureException.class
-//	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
+	@Retryable(retryFor = {
+		OptimisticLockException.class,
+		StaleObjectStateException.class,
+		ObjectOptimisticLockingFailureException.class
+	}, maxAttempts = 5, backoff = @Backoff(delay = 100))
 	@Transactional
 	public void deductStock(ProductCommand.DeductStock command) {
 		ProductStock stock = stockRepository.findByProductId(command.getProductId());

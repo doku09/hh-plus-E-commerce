@@ -63,7 +63,7 @@ public class OrderService {
 		dataFlatFormInterlock.sendToOrderInfo();
 	}
 
-	public List<OrderItem> getOrderBeforeFiveMiniutes() {
-		return orderRepository.findOrderBeforeFiveMinutes();
+	public List<OrderItem> getOrderBeforeHour(int hour) {
+		return orderRepository.getOrderBeforeHour(hour);
 	}
 }

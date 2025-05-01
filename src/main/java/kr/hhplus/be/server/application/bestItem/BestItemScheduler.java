@@ -9,6 +9,7 @@ import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.productStock.ProductStockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Transactional
 @RequiredArgsConstructor
+@Component
 public class BestItemScheduler {
 
 	private final OrderService orderService;
@@ -26,7 +28,7 @@ public class BestItemScheduler {
 
 	@Transactional
 	public void saveBestItem() {
-		List<OrderItem> orderItems = orderService.getOrderBeforeFiveMiniutes();
+		List<OrderItem> orderItems = orderService.getOrderBeforeHour(1);
 
 		Map<Long, Long> salesMap = orderItems.stream().collect(Collectors.groupingBy(
 			OrderItem::getProductId,
@@ -41,11 +43,12 @@ public class BestItemScheduler {
 			}
 
 			// BestItem 객체를 생성합니다.
-			BestItem findBestItem = Optional.of(bestItemService.findByProductId(product.getId()))
-				.orElse(bestItemService.save(BestItem.create(product, 0L)));
-
-			findBestItem.addSalesCount(salesQuantity);
-			bestItemService.save(findBestItem);
+			BestItem findItem = bestItemService.findByProductId(product.getId());
+			if(null == findItem) {
+				findItem = bestItemService.save(BestItem.create(product, 0L));
+			}
+			findItem.addSalesCount(salesQuantity);
+			bestItemService.save(findItem);
 		});
 	}
 }
