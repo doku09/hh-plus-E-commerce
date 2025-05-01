@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
-import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,11 +22,11 @@ public class BestItemRepositoryImpl implements BestItemRepository {
 
 	@Override
 	public BestItem save(BestItem bestItem) {
-		return null;
+		return bestItemJpaRepository.save(bestItem);
 	}
 
 	@Override
 	public BestItem findByProductId(Long id) {
-		return null;
+		return bestItemJpaRepository.findByProductId(id);
 	}
 }

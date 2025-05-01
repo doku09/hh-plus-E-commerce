@@ -6,10 +6,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import kr.hhplus.be.server.domain.BaseTimeEntity;
 import kr.hhplus.be.server.domain.product.Product;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
+@Getter
 public class BestItem extends BaseTimeEntity {
 
 	@Id
