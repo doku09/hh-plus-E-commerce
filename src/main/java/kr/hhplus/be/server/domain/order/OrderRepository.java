@@ -6,4 +6,8 @@ public interface OrderRepository {
 	void save(Order order);
 
 	List<OrderItem> findAllOrderItemsByIds(List<Long> orderIds);
+
+	Order findById(Long orderId);
+
+	List<OrderItem> getOrderBeforeHour(int hour);
 }

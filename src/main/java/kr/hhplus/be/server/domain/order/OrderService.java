@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.order;
 
+import kr.hhplus.be.server.common.DataFlatFormInterlock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import static java.util.stream.Collectors.*;
 public class OrderService {
 
 	private final OrderRepository orderRepository;
+	private final DataFlatFormInterlock dataFlatFormInterlock;
 
 	public OrderInfo.Order createOrder(OrderCommand.Create command) {
 		Order order = Order.createOrder(command.getUserId());
@@ -53,4 +55,15 @@ public class OrderService {
 		return OrderInfo.TopOrder.of(popularOrders);
 	}
 
+	public void updateStatusToPaid(Long orderId) {
+		Order order = orderRepository.findById(orderId);
+		order.changeStatus(OrderStatus.PAID);
+
+		//TODO: 구현 필요
+		dataFlatFormInterlock.sendToOrderInfo();
+	}
+
+	public List<OrderItem> getOrderBeforeHour(int hour) {
+		return orderRepository.getOrderBeforeHour(hour);
+	}
 }

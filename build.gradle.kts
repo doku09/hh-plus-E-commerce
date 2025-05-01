@@ -38,11 +38,16 @@ dependencies {
 	//Lombok
 	implementation("org.projectlombok:lombok:1.18.24")
 	annotationProcessor("org.projectlombok:lombok:1.18.24")
+
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
 	//Swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
+	// retry 적용
+	implementation ("org.springframework.retry:spring-retry")
+	implementation ("org.springframework:spring-aspects")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -50,6 +55,9 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	//redis
+	implementation ("org.redisson:redisson-spring-boot-starter:3.23.4")
 }
 
 tasks.withType<Test> {
