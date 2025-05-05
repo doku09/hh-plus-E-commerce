@@ -2,7 +2,6 @@ package kr.hhplus.be.server.config;
 
 import jakarta.servlet.Filter;
 import kr.hhplus.be.server.config.filter.AdvanceLogFilter;
-import kr.hhplus.be.server.config.filter.LogFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

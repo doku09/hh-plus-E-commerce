@@ -64,7 +64,7 @@ public class CouponServiceIntegrationTest {
 		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(userId, couponId);
 
 		//when
-		CouponInfo.Coupon issuedCoupon = couponService.issueCoupon(issueCommand);
+		Coupon issuedCoupon = couponService.issueCoupon(issueCommand);
 
 		//then
 		assertThat(issuedCoupon.getQuantity()).isEqualTo(1);
@@ -86,7 +86,7 @@ public class CouponServiceIntegrationTest {
 		couponService.issueCoupon(UserCouponCommand.Issue.of(tester.getId(), couponId));
 		//쿠폰 사용
 		CouponCommand.Use use = CouponCommand.Use.of(tester.getId(), couponId);
-		CouponInfo.Coupon coupon = couponService.useCoupon(use);
+		Coupon coupon = couponService.useCoupon(use);
 
 		// then
 		assertThat(coupon.getName()).isEqualTo(couponName);

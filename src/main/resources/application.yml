@@ -14,12 +14,29 @@ spring:
   jpa:
     open-in-view: false
     generate-ddl: false
-    show-sql: false
+#    show-sql: true
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+        use_sql_comments: true
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 # swagger-ui 설정
 #swagger-ui 접속 경로(http://localhost/swagger-ui/index.html)

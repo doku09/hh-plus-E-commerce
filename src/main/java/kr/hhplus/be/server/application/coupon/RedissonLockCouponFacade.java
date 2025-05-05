@@ -1,7 +1,7 @@
-package kr.hhplus.be.server.application.product;
+package kr.hhplus.be.server.application.coupon;
 
-import kr.hhplus.be.server.domain.product.ProductCommand;
-import kr.hhplus.be.server.domain.product.ProductService;
+import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.coupon.UserCouponCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
@@ -13,18 +13,19 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 @Slf4j
-public class RedissonLockStockFacade{
+public class RedissonLockCouponFacade {
 
 	private final RedissonClient redissonClient;
-	private final ProductService stockService;
+	private final CouponService couponService;
 
-	public void deductStock(ProductCommand.DeductStock command) {
+	public void issueCoupon(UserCouponCommand.Issue command) {
 
-		String lockKey = "lock:product:" + command.getProductId();
-		String channelName = "lock:channel:product" + command.getProductId();
+		String lockKey = "lock:coupon:" + command.getCouponId();
+		String channelName = "lock:channel:coupon" + command.getCouponId();
+
 		log.info("락 키: {}", lockKey);
 		long timeOutMs = 1000; // 10초
 		long startTime = System.currentTimeMillis();
@@ -36,11 +37,12 @@ public class RedissonLockStockFacade{
 
 			boolean acquired = lockBucket.setIfAbsent("LOCKED", Duration.ofSeconds(5));
 			log.info("[{}] 락 잡힘 여부: {}",Thread.currentThread().getName(),acquired);
+
 			if(Boolean.TRUE.equals(acquired)) {
-				log.info("[{}] Lock 획득 성공",Thread.currentThread().getName());
+				log.info("[{}] Lock 획득 성공", Thread.currentThread().getName());
 
 				try {
-					stockService.deductStock(command);
+					couponService.issueCoupon(command);
 				} finally {
 					lockBucket.delete();
 					redissonClient.getTopic(channelName).publish("UNLOCK");
@@ -67,7 +69,6 @@ public class RedissonLockStockFacade{
 				}
 
 				latch.await(remainTimeout, TimeUnit.SECONDS);
-
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				throw new RuntimeException(e);
@@ -76,4 +77,5 @@ public class RedissonLockStockFacade{
 			}
 		}
 	}
+
 }

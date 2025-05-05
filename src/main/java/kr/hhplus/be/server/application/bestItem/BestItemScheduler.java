@@ -2,19 +2,16 @@ package kr.hhplus.be.server.application.bestItem;
 
 import kr.hhplus.be.server.domain.bestItem.BestItem;
 import kr.hhplus.be.server.domain.bestItem.BestItemService;
-import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductService;
-import kr.hhplus.be.server.domain.productStock.ProductStockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Transactional
