@@ -5,15 +5,12 @@ import kr.hhplus.be.server.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
-import org.redisson.api.RLock;
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -23,7 +20,6 @@ public class RedissonLockStockFacade{
 
 	private final RedissonClient redissonClient;
 	private final ProductService stockService;
-	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
 	public void deductStock(ProductCommand.DeductStock command) {
 
@@ -34,6 +30,7 @@ public class RedissonLockStockFacade{
 		long startTime = System.currentTimeMillis();
 
 		while(true) {
+
 			RBucket<String> lockBucket = redissonClient
 				.getBucket(lockKey);
 

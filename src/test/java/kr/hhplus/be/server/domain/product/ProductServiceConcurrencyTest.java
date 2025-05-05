@@ -98,4 +98,34 @@ public class ProductServiceConcurrencyTest {
 		assertThat(stock.getQuantity()).isEqualTo(5-successCount.get());
 	}
 
+	@Test
+	@DisplayName("[성공] AOP 분산락을 사용하여 재고차감 동시성문제를 해결한다.")
+	void deduct_stock_aop_concurrency() {
+
+	  // given
+		Product product = Product.create("상품1",1000L);
+		productRepository.save(product);
+
+		ProductStock beforeStock = ProductStock.createInit(product.getId(),5);
+		stockRepository.save(beforeStock);
+
+	  // when
+		AtomicInteger successCount = new AtomicInteger();
+
+		executor.execute(()->{
+			try {
+				productService.deductStockWithAopLock("product",ProductCommand.DeductStock.of(product.getId(), 1));
+				successCount.incrementAndGet();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}},5);
+
+	  // then
+
+		ProductStock stock = stockRepository.findByProductId(product.getId());
+		// then
+		assertThat(stock).isNotNull();
+		assertThat(stock.getQuantity()).isEqualTo(5-successCount.get());
+
+	}
 }
