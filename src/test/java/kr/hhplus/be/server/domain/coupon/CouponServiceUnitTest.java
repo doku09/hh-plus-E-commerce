@@ -106,7 +106,7 @@ class CouponServiceUnitTest {
 		when(couponRepository.findCouponById(anyLong())).thenReturn(Optional.of(Coupon.create(couponName, discountPrice, quantity, CouponType.LIMITED, startDate, endDate)));
 		when(couponRepository.findIssuedCouponByUserIdAndCouponId(anyLong(), anyLong())).thenReturn(Optional.of(issuedCoupon));
 
-		CouponInfo.Coupon coupon = couponService.useCoupon(use);
+		Coupon coupon = couponService.useCoupon(use);
 
 		// then
 		assertThat(coupon.getName()).isEqualTo(couponName);
