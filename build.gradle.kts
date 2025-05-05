@@ -28,7 +28,7 @@ dependencyManagement {
 		mavenBom("org.springframework.cloud:spring-cloud-dependencies:2024.0.0")
 	}
 }
-
+val restAssuredVersion = "5.3.2"
 dependencies {
     // Spring
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -58,6 +58,11 @@ dependencies {
 
 	//redis
 	implementation ("org.redisson:redisson-spring-boot-starter:3.23.4")
+
+	//restAssured
+	testImplementation("io.rest-assured:rest-assured:${restAssuredVersion}")
+	testImplementation("io.rest-assured:json-path:${restAssuredVersion}")
+	testImplementation("io.rest-assured:json-schema-validator:${restAssuredVersion}")
 }
 
 tasks.withType<Test> {
