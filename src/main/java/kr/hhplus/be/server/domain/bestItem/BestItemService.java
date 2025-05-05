@@ -1,10 +1,10 @@
 package kr.hhplus.be.server.domain.bestItem;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -16,10 +16,11 @@ public class BestItemService {
 	@Transactional
 	public BestItem save(BestItem bestItem) {return bestItemRepository.save(bestItem);}
 
-	public List<BestItem> getBestItems(LocalDateTime now, int days, int limit) {
-		LocalDateTime from = now.minusDays(days);
+	@Cacheable(value = "bestItems", key = "'top10'")
+	@Transactional
+	public List<BestItem> getTop10BestItems() {
 
-		return bestItemRepository.findBestItemsTopCount(from, limit);
+		return bestItemRepository.findTop10ByOrderBySalesCountDesc();
 	}
 
 	public BestItem findByProductId(Long id) {

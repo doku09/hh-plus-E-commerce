@@ -11,4 +11,6 @@ public interface BestItemRepository {
 	BestItem save(BestItem bestItem);
 
 	BestItem findByProductId(Long id);
+
+	List<BestItem> findTop10ByOrderBySalesCountDesc();
 }

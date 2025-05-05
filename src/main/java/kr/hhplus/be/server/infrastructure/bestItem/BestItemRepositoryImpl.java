@@ -29,4 +29,9 @@ public class BestItemRepositoryImpl implements BestItemRepository {
 	public BestItem findByProductId(Long id) {
 		return bestItemJpaRepository.findByProductId(id);
 	}
+
+	@Override
+	public List<BestItem> findTop10ByOrderBySalesCountDesc() {
+		return bestItemJpaRepository.findTop10ByOrderBySalesCountDesc();
+	}
 }
