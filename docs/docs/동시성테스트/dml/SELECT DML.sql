@@ -16,6 +16,7 @@ SELECT * FROM point;
 -- 6. orders 테이블
 SELECT * FROM orders;
 
+
 -- 7. order_item 테이블
 SELECT * FROM order_item;
 
@@ -25,6 +26,7 @@ SELECT * FROM payment;
 -- 9. user_coupon 테이블
 SELECT * FROM user_coupon;
 
+select * from best_item;
 -- 10. (외래키 포함 여부 확인용 조인 예시) 주문과 주문상품 조인
 SELECT o.order_id, o.user_id, oi.product_id, oi.total_price
 FROM orders o

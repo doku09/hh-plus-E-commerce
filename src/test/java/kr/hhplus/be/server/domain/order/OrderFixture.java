@@ -11,4 +11,12 @@ public class OrderFixture {
 
 		return order;
 	}
+
+	public static Order createOrderWithOrderItems(Long productId,Long userId, OrderStatus status) {
+		Order order = new Order(userId, status);
+
+		order.addItem(OrderItem.of(productId, 1000L, 5));
+
+		return order;
+	}
 }

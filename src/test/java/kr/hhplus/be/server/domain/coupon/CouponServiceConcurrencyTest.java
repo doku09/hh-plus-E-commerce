@@ -1,15 +1,22 @@
 package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.persistence.OptimisticLockException;
+import kr.hhplus.be.server.common.lock.LockKey;
 import kr.hhplus.be.server.concurrent.ConcurrencyExecutor;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.infrastructure.coupon.CouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.coupon.UserCouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -27,9 +34,24 @@ public class CouponServiceConcurrencyTest {
 	@Autowired
 	private CouponService couponService;
 	@Autowired
+	private CouponDistributedLockService couponDistributedLockService;
+	@Autowired
 	private CouponRepository couponRepository;
 	@Autowired
 	private ConcurrencyExecutor executor;
+	@Autowired
+	private UserCouponJpaRepository userCouponJpaRepository;
+	@Autowired
+	private CouponJpaRepository couponJpaRepository;
+	@Autowired
+	private UserJpaRepository userJpaRepository;
+
+	@AfterEach
+	void tearDown() {
+		userCouponJpaRepository.deleteAllInBatch();
+		couponJpaRepository.deleteAllInBatch();
+		userJpaRepository.deleteAllInBatch();
+	}
 
 	@Test
 	@DisplayName("[성공] 동일한 유저가 동시에 같은 쿠폰 발급 요청 시 비관적 락에 의해 쿠폰 하나만 발급한다. ")
@@ -51,7 +73,7 @@ public class CouponServiceConcurrencyTest {
 		AtomicInteger successCount = new AtomicInteger();
 		executor.execute(() -> {
 			try {
-				couponService.issueCoupon(issueCommand);
+				couponService.issueCouponWithPessimisticLock(issueCommand);
 				successCount.incrementAndGet();
 			} catch (OptimisticLockException e) {
 				e.printStackTrace();
@@ -77,11 +99,7 @@ public class CouponServiceConcurrencyTest {
 		}
 
 		List<User> users = userRepository.findAll();
-
-		Coupon coupon = couponRepository.saveCoupon(Coupon.create(
-			"선착순 쿠폰", 1000L, 10,CouponType.LIMITED,
-			LocalDateTime.now(), LocalDateTime.now().plusDays(7)
-		));
+		Coupon coupon = createTenCoupon();
 
 		long couponId = coupon.getId();
 
@@ -91,9 +109,10 @@ public class CouponServiceConcurrencyTest {
 		AtomicInteger successCount = new AtomicInteger();
 		for (int i = 0; i < 10; i++) {
 			UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(couponId, users.get(i).getId());
+
 			executorService.submit(() -> {
 				try {
-					couponService.issueCoupon(issueCommand);
+					couponService.issueCouponWithPessimisticLock(issueCommand);
 					successCount.incrementAndGet();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -103,7 +122,7 @@ public class CouponServiceConcurrencyTest {
 			});
 		}
 		latch.await();
-
+		executorService.shutdown();
 		// then
 		List<UserCoupon> issued = couponRepository.findAllUserCoupon();
 		Coupon findCoupon = couponRepository.findCouponById(couponId).orElse(null);
@@ -111,5 +130,94 @@ public class CouponServiceConcurrencyTest {
 		assertThat(successCount.get()).isEqualTo(10);
 		assertThat(issued.size()).isEqualTo(successCount.get());
 		assertThat(findCoupon.getQuantity()).isEqualTo(10 - successCount.get());
+	}
+
+	@Test
+	@DisplayName("[성공] simpleLock 적용하여 10명의 유저에게 10개의 쿠폰을 정상적으로 발급한다.")
+	void simpleLock_issue_coupon() throws InterruptedException {
+		// given
+		int threadCount = 10;
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch latch = new CountDownLatch(10);
+
+		// 유저 10명 생성
+		List<Long> userIds = createTenUsers();
+		// 10장 생성
+		Coupon coupon = createTenCoupon();
+
+		// when
+		for (int i = 0; i < threadCount; i++) {
+			Long userId = userIds.get(i);
+			UserCouponCommand.Issue issue = UserCouponCommand.Issue.of(coupon.getId(), userId);
+
+			executorService.submit(() -> {
+					try {
+						couponDistributedLockService.issueCouponWithSimpleLock(issue);
+					} catch (Exception e) {
+						System.out.println(e.getClass().getSimpleName());
+					} finally {
+						latch.countDown();
+					}
+			});
+		}
+		latch.await();
+		executorService.shutdown();
+
+	  // then
+		Coupon result = couponRepository.findCouponById(coupon.getId()).orElse(null);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getQuantity()).isEqualTo(9);
+	}
+
+
+	@Test
+	@DisplayName("[성공] Aop로 분산락 적용하여 10명의 유저에게 10개의 쿠폰을 정상적으로 발급한다.")
+	void AopLock_issue_coupon() throws InterruptedException {
+
+		// given
+		List<Long> userIds = createTenUsers();
+		Coupon coupon = createTenCoupon();
+
+		int threadCount = 10;
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+
+		// when
+		for (int i = 0; i < threadCount; i++) {
+			Long userId = userIds.get(i);
+			executorService.submit(() -> {
+				try{
+					UserCouponCommand.Issue issue = UserCouponCommand.Issue.of(coupon.getId(), userId);
+					couponService.issueCouponWithAnnoationLock(LockKey.COUPON,issue);
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+
+		latch.await();
+		executorService.shutdown();
+		// then
+		Coupon result = couponRepository.findCouponById(coupon.getId()).orElse(null);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getQuantity()).isEqualTo(0);
+	}
+
+	private List<Long> createTenUsers() {
+		List<Long> userIds = new ArrayList<>();
+
+		for (int i = 0; i < 10; i++) {
+			User user = userRepository.save(User.create("테스터"));
+			userIds.add(user.getId());
+		}
+
+		return userIds;
+	}
+
+	private Coupon createTenCoupon() {
+		Coupon coupon = couponRepository.saveCoupon(CouponFixture.create(10));
+		return coupon;
 	}
 }

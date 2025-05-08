@@ -2,16 +2,19 @@ package kr.hhplus.be.server.domain.product;
 
 import kr.hhplus.be.server.domain.productStock.ProductStock;
 import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
+import kr.hhplus.be.server.infrastructure.product.ProductJpaRepository;
+import kr.hhplus.be.server.infrastructure.stock.ProductStockJpaRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-
+@ActiveProfiles("test")
 @SpringBootTest
 class ProductServiceIntegrationTest {
 
@@ -22,6 +25,17 @@ class ProductServiceIntegrationTest {
 	@Autowired
 	private ProductRepository productRepository;
 
+
+	@Autowired
+	private ProductJpaRepository productJpaRepository;
+	@Autowired
+	private ProductStockJpaRepository productStockJpaRepository;
+
+	@AfterEach
+	void tearDown() {
+		productJpaRepository.deleteAllInBatch();
+		productStockJpaRepository.deleteAllInBatch();
+	}
 
 	@Test
 	@DisplayName("[성공] 상품을 등록한다.")
@@ -49,27 +63,29 @@ class ProductServiceIntegrationTest {
 	  // given
 
 		// 1번 1개, 2번 1개
-
-
 		// when
-		ProductInfo.Product p1 = productService.register(ProductCommand.Create.of("수박", 3000L, 10));
-		ProductInfo.Product p2 = productService.register(ProductCommand.Create.of("사과", 4500L, 5));
+		Product p1 = Product.create("수박", 3000L);
+		productRepository.save(p1);
+		stockRepository.save(ProductStock.createInit(p1.getId(),10));
+
+		Product p2 = Product.create("사과", 3000L);
+		productRepository.save(p2);
+		stockRepository.save(ProductStock.createInit(p2.getId(),5));
 
 		ProductCommand.OrderProducts orderProducts = ProductCommand.OrderProducts.of(List.of(
 			ProductCommand.OrderProduct.of(p1.getId(), 5),
 			ProductCommand.OrderProduct.of(p2.getId(), 5))
 		);
 
-		ProductStock productStock1 = stockRepository.findByProductId(p1.getId());
-		ProductStock productStock2 = stockRepository.findByProductId(p2.getId());
-
-		Product findProduct1 = productRepository.findById(p1.getId()).orElse(null);
-		Product findProduct2 = productRepository.findById(p2.getId()).orElse(null);
-
 		ProductInfo.OrderProducts products = productService.deductOrderItemsStock(orderProducts);
 
 	  // then
-		assertThat(products.getOrderProducts().get(0).getQuantity()).isEqualTo(5);
-		assertThat(products.getOrderProducts().get(1).getQuantity()).isEqualTo(0);
+		Long findP1 = products.getOrderProducts().get(0).getProductId();
+		Long findP2 = products.getOrderProducts().get(1).getProductId();
+
+		ProductStock stock1 = stockRepository.findByProductId(findP1);
+		ProductStock stock2 = stockRepository.findByProductId(findP2);
+		assertThat(stock1.getQuantity()).isEqualTo(5);
+		assertThat(stock2.getQuantity()).isEqualTo(0);
 	}
 }

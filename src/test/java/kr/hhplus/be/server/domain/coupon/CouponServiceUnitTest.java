@@ -35,9 +35,9 @@ class CouponServiceUnitTest {
 	void make_unlimited_coupon() {
 
 	  // given
-		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate);
+		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", 1000L, 5, CouponType.LIMITED, startDate, endDate);
 
-		when(couponRepository.saveCoupon(any())).thenReturn(Coupon.create("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate));
+		when(couponRepository.saveCoupon(any())).thenReturn(Coupon.create("깜짝쿠폰", 1000L, 5, CouponType.LIMITED, startDate, endDate));
 
 		//when
 		CouponInfo.Coupon result = couponService.register(command);
@@ -106,7 +106,7 @@ class CouponServiceUnitTest {
 		when(couponRepository.findCouponById(anyLong())).thenReturn(Optional.of(Coupon.create(couponName, discountPrice, quantity, CouponType.LIMITED, startDate, endDate)));
 		when(couponRepository.findIssuedCouponByUserIdAndCouponId(anyLong(), anyLong())).thenReturn(Optional.of(issuedCoupon));
 
-		CouponInfo.Coupon coupon = couponService.useCoupon(use);
+		Coupon coupon = couponService.useCoupon(use);
 
 		// then
 		assertThat(coupon.getName()).isEqualTo(couponName);
