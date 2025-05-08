@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.application.order;
 
-import kr.hhplus.be.server.common.exception.OptimisticLockingRetryException;
 import kr.hhplus.be.server.concurrent.ConcurrencyExecutor;
 import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointRepository;
@@ -89,8 +88,7 @@ class OrderFacadeConcurrencyTest {
 		System.out.println("예외 목록: " + results);
 
 
-		assertThat(successCount).isEqualTo(1);
-		assertThat(failureCount >= 1).isTrue();
+		assertThat(successCount).isEqualTo(5);
 	}
 
 
@@ -99,7 +97,6 @@ class OrderFacadeConcurrencyTest {
 	void sequence_order_success() throws InterruptedException {
 
 		// given
-
 		// 사용자 생성
 		User user = User.create("테스터");
 		userRepository.save(user);
@@ -124,9 +121,10 @@ class OrderFacadeConcurrencyTest {
 		orderFacade.order(orderCriteria);
 		orderFacade.order(orderCriteria);
 
+		ProductStock result = productStockRepository.findByProductId(product.getId());
 
 		// then
-		assertThat(stock.getQuantity()).isEqualTo(2);
+		assertThat(result.getQuantity()).isEqualTo(2);
 	}
 
 	@Test

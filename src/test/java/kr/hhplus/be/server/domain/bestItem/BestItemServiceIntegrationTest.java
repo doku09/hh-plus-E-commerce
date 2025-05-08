@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.bestItem;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import kr.hhplus.be.server.application.bestItem.BestItemsCacheDto;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderFixture;
 import kr.hhplus.be.server.domain.order.OrderRepository;
@@ -10,16 +11,16 @@ import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.productStock.ProductStock;
 import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
-import kr.hhplus.be.server.domain.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+@ActiveProfiles("test")
 @SpringBootTest
 class BestItemServiceIntegrationTest {
 
@@ -43,14 +44,15 @@ class BestItemServiceIntegrationTest {
 		}
 
 		// when
-		List<BestItem> items = bestItemService.getTop10BestItems();
+		List<BestItemsCacheDto> items = bestItemService.getTop10BestItems();
 		System.out.println("DB 조회: " + items.size());
-		List<BestItem> items2 = bestItemService.getTop10BestItems();
+		List<BestItemsCacheDto> items2 = bestItemService.getTop10BestItems();
 		System.out.println("캐시 조회: " + items2.size());
 		// then
 		assertThat(items).isNotNull();
 		assertThat(items.size()).isGreaterThan(1);
 	}
+
 
 	private void createBestItems(Product product) {
 		bestItemRepository.save(BestItem.create(product,2));
