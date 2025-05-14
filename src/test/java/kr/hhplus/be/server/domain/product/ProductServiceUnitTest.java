@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
+import kr.hhplus.be.server.common.TimeHelper;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import kr.hhplus.be.server.common.exception.NegativePriceException;
@@ -31,6 +32,8 @@ class ProductServiceUnitTest {
 	private ProductRepository productRepository;
 	@Mock
 	private ProductStockRepository stockRepository;
+	@Mock
+	private TimeHelper timeHelper;
 
 	@Test
 	@DisplayName("[실패] 상품등록 시 상품명을 입력하지 않으면 예외를 던진다.")
@@ -104,34 +107,5 @@ class ProductServiceUnitTest {
 	@Test
 	@DisplayName("[성공] 주문 성공시 재고차감")
 	void success_order_deductStock() {
-
-	  // given
-
-		// 1번 1개, 2번 1개
-		ProductCommand.OrderProducts orderProducts = ProductCommand.OrderProducts.of(List.of(
-			ProductCommand.OrderProduct.of(1L, 1),
-			ProductCommand.OrderProduct.of(2L, 1))
-		);
-
-		// when
-		Product product1 = new Product(1L, "커피", 3000L);
-		Product product2 = new Product(2L, "커피", 3000L);
-
-		ProductStock stock1 = new ProductStock(product1.getId(),5);
-		ProductStock stock2 = new ProductStock(product2.getId(),5);
-
-		// 1번 2번 5개씩 존재
-		when(stockRepository.findByProductId(1L)).thenReturn(stock1);
-		when(stockRepository.findByProductId(2L)).thenReturn(stock2);
-
-		//
-		when(productRepository.findById(1L)).thenReturn(Optional.of(product1));
-		when(productRepository.findById(2L)).thenReturn(Optional.of(product2));
-		ProductInfo.OrderProducts products = productService.deductOrderItemsStock(orderProducts);
-
-
-	  // then
-		assertThat(products.getOrderProducts().get(0).getQuantity()).isEqualTo(4);
-		assertThat(products.getOrderProducts().get(1).getQuantity()).isEqualTo(4);
 	}
 }

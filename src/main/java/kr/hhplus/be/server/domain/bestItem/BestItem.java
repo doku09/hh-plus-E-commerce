@@ -33,7 +33,7 @@ public class BestItem extends BaseTimeEntity {
 		return new BestItem(product.getId(), product.getName(), product.getPrice(), salesCount);
 	}
 
-	public void addSalesCount(Long salesQuantity) {
-		this.salesCount += salesQuantity;
+	public void updateSalesCount(Long salesQuantity) {
+		this.salesCount = salesQuantity;
 	}
 }

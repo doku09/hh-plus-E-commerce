@@ -28,10 +28,6 @@ public class Coupon {
 
 	private Coupon(String name, Long discountPrice, Integer quantity, CouponType couponType, LocalDateTime useStartDate, LocalDateTime expiredDate) {
 
-		if(couponType == CouponType.LIMITED && quantity <= 0) {
-			throw new GlobalBusinessException(ErrorCode.INVALID_COUPON_QUANTITY);
-		}
-
 		 this.name = name;
 		 this.discountPrice = discountPrice;
 		 this.couponType = couponType;
@@ -56,7 +52,7 @@ public class Coupon {
 		}
 
 		if (couponType == CouponType.LIMITED) {
-			if (quantity < 0) {
+			if (quantity <= 0) {
 				throw new GlobalBusinessException(ErrorCode.NOT_ENOUGH_COUPON);
 			}
 

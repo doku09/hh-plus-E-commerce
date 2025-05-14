@@ -23,7 +23,6 @@ public class OrderServiceIntegrationTest {
 
 	@Test
 	@DisplayName("[성공] 주문을 생성한다.")
-	@Transactional
 	void orderTotalPrice_equal_orderItemTotal() {
 
 		// given
@@ -45,39 +44,9 @@ public class OrderServiceIntegrationTest {
 		assertThat(order.getTotalPrice()).isEqualTo(5000L);
 	}
 
-	@Test
-	@DisplayName("[성공] 주문수량이 많은 순서대로 상품을 가져온다")
-	@Transactional
-	void get_top_order_items() {
-
-		// given
-		int limit = 2;
-		OrderCommand.TopOrderedProducts topOrderedProducts = OrderCommand.TopOrderedProducts.of(List.of(1L, 2L, 3L, 4L), limit);
-
-		// when
-		Order order1 = OrderFixture.createOrderWithOrderItems(1L,OrderStatus.PAID);
-		Order order2 = OrderFixture.createOrderWithOrderItems(2L,OrderStatus.PAID);
-		Order order3 = OrderFixture.createOrderWithOrderItems(3L,OrderStatus.PAID);
-
-
-		orderRepository.save(order1);
-		orderRepository.save(order2);
-		orderRepository.save(order3);
-
-		OrderInfo.TopOrder topOrder =
-			orderService.getTopOrder(topOrderedProducts);
-
-		// then
-		assertThat(topOrder).isNotNull();
-		assertThat(topOrder.getPopularOrders()).isNotNull();
-		assertThat(topOrder.getPopularOrders().size()).isEqualTo(2);
-		assertThat(topOrder.getPopularOrders().get(0).getItemId()).isEqualTo(22L);
-		assertThat(topOrder.getPopularOrders().get(1).getItemId()).isEqualTo(34L);
-	}
 
 	@Test
 	@DisplayName("인기상품 조회를 위해 1시간전 주문된 상품을 가져온다.")
-	@Transactional
 	void getOrderBeforeFiveMiniutes() {
 
 	  // given

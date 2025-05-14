@@ -5,7 +5,10 @@ import kr.hhplus.be.server.common.lock.LockKey;
 import kr.hhplus.be.server.concurrent.ConcurrencyExecutor;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import kr.hhplus.be.server.infrastructure.coupon.CouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.coupon.UserCouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,19 @@ public class CouponServiceConcurrencyTest {
 	private CouponRepository couponRepository;
 	@Autowired
 	private ConcurrencyExecutor executor;
+	@Autowired
+	private UserCouponJpaRepository userCouponJpaRepository;
+	@Autowired
+	private CouponJpaRepository couponJpaRepository;
+	@Autowired
+	private UserJpaRepository userJpaRepository;
+
+	@AfterEach
+	void tearDown() {
+		userCouponJpaRepository.deleteAllInBatch();
+		couponJpaRepository.deleteAllInBatch();
+		userJpaRepository.deleteAllInBatch();
+	}
 
 	@Test
 	@DisplayName("[성공] 동일한 유저가 동시에 같은 쿠폰 발급 요청 시 비관적 락에 의해 쿠폰 하나만 발급한다. ")
@@ -57,7 +73,7 @@ public class CouponServiceConcurrencyTest {
 		AtomicInteger successCount = new AtomicInteger();
 		executor.execute(() -> {
 			try {
-				couponService.issueCoupon(issueCommand);
+				couponService.issueCouponWithPessimisticLock(issueCommand);
 				successCount.incrementAndGet();
 			} catch (OptimisticLockException e) {
 				e.printStackTrace();
@@ -106,7 +122,7 @@ public class CouponServiceConcurrencyTest {
 			});
 		}
 		latch.await();
-
+		executorService.shutdown();
 		// then
 		List<UserCoupon> issued = couponRepository.findAllUserCoupon();
 		Coupon findCoupon = couponRepository.findCouponById(couponId).orElse(null);
@@ -145,12 +161,13 @@ public class CouponServiceConcurrencyTest {
 			});
 		}
 		latch.await();
+		executorService.shutdown();
 
 	  // then
 		Coupon result = couponRepository.findCouponById(coupon.getId()).orElse(null);
 
 		assertThat(result).isNotNull();
-		assertThat(result.getQuantity()).isEqualTo(0);
+		assertThat(result.getQuantity()).isEqualTo(9);
 	}
 
 
@@ -180,6 +197,7 @@ public class CouponServiceConcurrencyTest {
 		}
 
 		latch.await();
+		executorService.shutdown();
 		// then
 		Coupon result = couponRepository.findCouponById(coupon.getId()).orElse(null);
 

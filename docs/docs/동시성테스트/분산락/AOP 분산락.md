@@ -27,7 +27,8 @@
 }
 ```
 이렇게 했을때 문제점은 
-- 비즈니스가 있는 couponService가 있음에도, 락을 위한 클래스(couponLockService.class)가 필요하며 레이어를 하나 더 만들어야 하는 문제가 발생하였다.
+- 비즈니스가 있는 couponService가 있음에도, 락을 위한 
+- 클래스(couponLockService.class)가 필요하며 레이어를 하나 더 만들어야 하는 문제가 발생하였다.
 - couponService를 사용하는 facade를 만들때도 facade를 래핑한 클래스를 만들어야한다.
 - 락의 적용여부에 따라 클래스가 달라지므로 컨트롤러에서 호출하는 코드도 상황에 따라 변한다.
 

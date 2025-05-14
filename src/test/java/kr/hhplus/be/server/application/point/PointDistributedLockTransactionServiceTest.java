@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-
+@ActiveProfiles("test")
 @SpringBootTest
 class PointDistributedLockTransactionServiceTest {
 	@Autowired
@@ -35,7 +35,6 @@ class PointDistributedLockTransactionServiceTest {
 	@Test
 	@Order(1)
 	@DisplayName("[성공] simpleLock 분산락으로 포인트 사용 동시성을 제어한다.")
-	@DirtiesContext
 	void simplLock_point_use() {
 
 		// given

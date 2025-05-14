@@ -2,7 +2,10 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
+import kr.hhplus.be.server.infrastructure.coupon.CouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.coupon.UserCouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +32,19 @@ public class CouponServiceIntegrationTest {
 	@Autowired
 	private CouponService couponService;
 
-	@BeforeEach
-	void setUp() {
-		;
+	@Autowired
+	private UserCouponJpaRepository userCouponJpaRepository;
+	@Autowired
+	private CouponJpaRepository couponJpaRepository;
+	@Autowired
+	private UserJpaRepository userJpaRepository;
+
+
+	@AfterEach
+	void tearDown() {
+		userCouponJpaRepository.deleteAllInBatch();
+		couponJpaRepository.deleteAllInBatch();
+		userJpaRepository.deleteAllInBatch();
 	}
 
 	@Test
@@ -55,13 +68,11 @@ public class CouponServiceIntegrationTest {
 	void issue_coupon_success() {
 
 		// given
-		long userId = 1L;
-		long couponId = 1L;
+		long userId = 2L;
 
-		Coupon coupon = Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate);
-		couponRepository.saveCoupon(coupon);
+		Coupon coupon = couponRepository.saveCoupon(Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate));
 
-		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(userId, couponId);
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(coupon.getId(),userId);
 
 		//when
 		Coupon issuedCoupon = couponService.issueCoupon(issueCommand);
@@ -75,20 +86,19 @@ public class CouponServiceIntegrationTest {
 	void useCoupon() {
 
 		// given
-		long couponId = 1L;
 		String couponName = "깜짝쿠폰";
 		//유저 생성
 		User tester = userRepository.save(User.create("tester"));
 		// 쿠폰 생성
-		Coupon saveCoupon = Coupon.create(couponName, 1000L,2,CouponType.LIMITED, startDate, endDate);
-		couponRepository.saveCoupon(saveCoupon);
-		// 쿠폰 발행
-		couponService.issueCoupon(UserCouponCommand.Issue.of(tester.getId(), couponId));
-		//쿠폰 사용
-		CouponCommand.Use use = CouponCommand.Use.of(tester.getId(), couponId);
-		Coupon coupon = couponService.useCoupon(use);
+		Coupon coupon = couponRepository.saveCoupon(Coupon.create("깜짝쿠폰", 1000L,2,CouponType.LIMITED, startDate, endDate));
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(coupon.getId(),tester.getId());
+		couponService.issueCoupon(issueCommand);
+
+		//when
+		CouponCommand.Use use = CouponCommand.Use.of(tester.getId(), coupon.getId());
+		Coupon usedCoupon = couponService.useCoupon(use);
 
 		// then
-		assertThat(coupon.getName()).isEqualTo(couponName);
+		assertThat(usedCoupon.getName()).isEqualTo(couponName);
 	}
 }

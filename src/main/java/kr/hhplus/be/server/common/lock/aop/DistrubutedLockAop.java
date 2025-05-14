@@ -31,7 +31,9 @@ public class DistrubutedLockAop {
 		DistributedLockTransaction distributedLockTransaction = method.getAnnotation(DistributedLockTransaction.class);
 
 		String key = LockKey.REDISSON_LOCK_PREFIX + CustomSpringELParser.getDynamicValue(signature.getParameterNames(), joinPoint.getArgs(), distributedLockTransaction.key());
+
 		RLock rLock = redissonClient.getLock(key);
+
 		try {
 			boolean available = rLock.tryLock(distributedLockTransaction.waitTime(), distributedLockTransaction.leaseTime(), distributedLockTransaction.timeUnit());
 			if(!available){

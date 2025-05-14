@@ -35,9 +35,9 @@ class CouponServiceUnitTest {
 	void make_unlimited_coupon() {
 
 	  // given
-		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate);
+		CouponCommand.Create command = CouponCommand.Create.of("깜짝쿠폰", 1000L, 5, CouponType.LIMITED, startDate, endDate);
 
-		when(couponRepository.saveCoupon(any())).thenReturn(Coupon.create("깜짝쿠폰", 1000L, 0, CouponType.LIMITED, startDate, endDate));
+		when(couponRepository.saveCoupon(any())).thenReturn(Coupon.create("깜짝쿠폰", 1000L, 5, CouponType.LIMITED, startDate, endDate));
 
 		//when
 		CouponInfo.Coupon result = couponService.register(command);

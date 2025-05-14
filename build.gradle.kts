@@ -58,6 +58,8 @@ dependencies {
 
 	//redis
 	implementation ("org.redisson:redisson-spring-boot-starter:3.23.4")
+	implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+	implementation ("org.springframework.boot:spring-boot-starter-data-redis")
 
 	//restAssured
 	testImplementation("io.rest-assured:rest-assured:${restAssuredVersion}")

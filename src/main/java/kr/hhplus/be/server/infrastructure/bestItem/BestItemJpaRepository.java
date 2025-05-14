@@ -22,4 +22,6 @@ public interface BestItemJpaRepository extends JpaRepository<BestItem, Long> {
 	List<BestItem> findBestItemsTopCount(@Param("from") LocalDateTime from, PageRequest pageRequest);
 
 	BestItem findByProductId(Long id);
+
+	List<BestItem> findTop10ByOrderBySalesCountDesc();
 }
