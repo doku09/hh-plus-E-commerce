@@ -4,6 +4,7 @@ import jakarta.persistence.OptimisticLockException;
 import kr.hhplus.be.server.common.TimeHelper;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
+import kr.hhplus.be.server.common.lock.aop.DistributedLockTransaction;
 import kr.hhplus.be.server.domain.productStock.ProductStock;
 import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,10 +66,7 @@ public class ProductService {
 
 		for (ProductCommand.OrderProduct orderProduct : orderProducts.getOrderProducts()) {
 
-			ProductStock productStock = stockRepository.findByProductId(orderProduct.getProductId());
-
-			// 재고 차감
-			productStock.deduct(orderProduct.getQuantity());
+			this.deductStock(ProductCommand.DeductStock.of(orderProduct.getProductId(),orderProduct.getQuantity()));
 
 			Product product = productRepository.findById(orderProduct.getProductId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_PRODUCT));
 
@@ -104,4 +102,11 @@ public class ProductService {
 		ProductStock stock = stockRepository.findByProductId(command.getProductId());
 		stock.deduct(command.getQuantity());
 	}
+
+	@DistributedLockTransaction(key = "#lockName.concat(':').concat(#command.getProductId())")
+	public void deductStockWithAopLock(String lockName,ProductCommand.DeductStock command) {
+		ProductStock stock = stockRepository.findByProductId(command.getProductId());
+		stock.deduct(command.getQuantity());
+	}
+
 }
