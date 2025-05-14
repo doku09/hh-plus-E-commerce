@@ -10,4 +10,5 @@ public interface OrderRepository {
 	Order findById(Long orderId);
 
 	List<OrderItem> getOrderBeforeHour(int hour);
+	List<OrderItem> getOrderBeforeDay(int day);
 }

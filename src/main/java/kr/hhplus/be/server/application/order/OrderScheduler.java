@@ -34,7 +34,7 @@ public class OrderScheduler {
 	}
 
 	private long getRandomUserId() {
-		return random.nextInt(10) + 1; // 1~100번 사용자
+		return random.nextInt(10) + 1; // 1~10번 사용자
 	}
 
 	private Long maybeGetCouponId() {

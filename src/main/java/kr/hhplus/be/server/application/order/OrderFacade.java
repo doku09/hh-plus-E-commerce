@@ -13,6 +13,7 @@ import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,9 @@ public class OrderFacade {
 	private final CouponService couponService;
 	private final PaymentService paymentService;
 
+	private final ApplicationEventPublisher publisher;
+
+	@Transactional
 	public OrderResult.Order order(OrderCriteria.CreateOrder criteria) {
 		// 재고 조회
 		List<ProductCommand.OrderProduct> orderProducts = criteria.getOrderItems().stream()
@@ -69,6 +73,9 @@ public class OrderFacade {
 		paymentService.pay(PaymentCommand.Create.of(orderInfo.getId(), orderInfo.getDiscountPrice()));
 
 		orderService.updateStatusToPaid(orderInfo.getId());
+
+		publisher.publishEvent(new OrderCompletedEvent(criteria.getOrderItems()));
+
 		return OrderResult.Order.of(orderInfo.getId(), orderInfo.getTotalPrice(), orderInfo.getDiscountPrice(), orderInfo.getStatus());
 	}
 

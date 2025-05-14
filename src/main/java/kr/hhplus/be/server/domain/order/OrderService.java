@@ -66,4 +66,8 @@ public class OrderService {
 	public List<OrderItem> getOrderBeforeHour(int hour) {
 		return orderRepository.getOrderBeforeHour(hour);
 	}
+
+	public List<OrderItem> getOrderBeforeDay(int day) {
+		return orderRepository.getOrderBeforeHour(day);
+	}
 }

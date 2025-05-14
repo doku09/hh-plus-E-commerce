@@ -36,7 +36,17 @@ public class OrderRepositoryImpl implements OrderRepository {
 	public List<OrderItem> getOrderBeforeHour(int hour) {
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime beforeHours = now.minusHours(hour);
-		List<Order> orders = orderJpaRepository.getOrderBeforeHour(beforeHours,now);
+		List<Order> orders = orderJpaRepository.getOrderBefore(beforeHours,now);
+
+		List<Long> orderIds = orders.stream().map(Order::getId).toList();
+		return orderJpaRepository.findAllOrderItemsByIds(orderIds);
+	}
+
+	@Override
+	public List<OrderItem> getOrderBeforeDay(int day) {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime beforeDays = now.minusDays(day);
+		List<Order> orders = orderJpaRepository.getOrderBefore(beforeDays,now);
 
 		List<Long> orderIds = orders.stream().map(Order::getId).toList();
 		return orderJpaRepository.findAllOrderItemsByIds(orderIds);

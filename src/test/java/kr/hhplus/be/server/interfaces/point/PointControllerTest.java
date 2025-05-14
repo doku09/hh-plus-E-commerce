@@ -12,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
 @SpringBootTest
-class PointControllerIntegrationTest {
+class PointControllerTest {
 
 	@Autowired
 	private UserRepository userRepository;

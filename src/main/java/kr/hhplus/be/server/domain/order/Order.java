@@ -62,6 +62,12 @@ public class Order extends BaseTimeEntity {
 		totalPrice += orderItem.getTotalPrice();
 	}
 
+	public void addItems(List<OrderItem> orderItems) {
+		for (OrderItem orderItem : orderItems) {
+			this.addItem(orderItem);
+		}
+	}
+
 	public void changeStatus(OrderStatus orderStatus) {
 		this.status = orderStatus;
 	}
