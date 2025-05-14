@@ -86,7 +86,7 @@ class BestItemSchedulerTest {
 		orderRepository.save(order2);
 		orderRepository.save(order3);
 		// when
-		scheduler.saveBestItem();
+		scheduler.warmDailyRanking();
 
 	  // then
 		List<BestItem> items = bestItemRepository.findBestItemsTopCount(LocalDateTime.now().minusHours(1), 5);
