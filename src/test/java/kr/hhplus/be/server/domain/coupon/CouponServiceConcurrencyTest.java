@@ -7,17 +7,21 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.infrastructure.coupon.CouponJpaRepository;
 import kr.hhplus.be.server.infrastructure.coupon.UserCouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.redis.RedisRepository;
 import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,12 +49,24 @@ public class CouponServiceConcurrencyTest {
 	private CouponJpaRepository couponJpaRepository;
 	@Autowired
 	private UserJpaRepository userJpaRepository;
+	@Autowired
+	private RedisRepository redisRepository;
+	@Autowired
+	private RedisCacheManager redisCacheManager;
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
+
+	private LocalDateTime startDate = LocalDateTime.now().minusDays(10);
+	private LocalDateTime endDate = LocalDateTime.now().plusDays(30);
 
 	@AfterEach
 	void tearDown() {
 		userCouponJpaRepository.deleteAllInBatch();
 		couponJpaRepository.deleteAllInBatch();
 		userJpaRepository.deleteAllInBatch();
+
+		redisCacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(redisCacheManager.getCache(cacheName)).clear());
+		redisTemplate.delete(Objects.requireNonNull(redisTemplate.keys("*")));
 	}
 
 	@Test
@@ -141,7 +157,7 @@ public class CouponServiceConcurrencyTest {
 		CountDownLatch latch = new CountDownLatch(10);
 
 		// 유저 10명 생성
-		List<Long> userIds = createTenUsers();
+		List<Long> userIds = createUsers(10);
 		// 10장 생성
 		Coupon coupon = createTenCoupon();
 
@@ -176,7 +192,7 @@ public class CouponServiceConcurrencyTest {
 	void AopLock_issue_coupon() throws InterruptedException {
 
 		// given
-		List<Long> userIds = createTenUsers();
+		List<Long> userIds = createUsers(10);
 		Coupon coupon = createTenCoupon();
 
 		int threadCount = 10;
@@ -205,11 +221,11 @@ public class CouponServiceConcurrencyTest {
 		assertThat(result.getQuantity()).isEqualTo(0);
 	}
 
-	private List<Long> createTenUsers() {
+	private List<Long> createUsers(int num) {
 		List<Long> userIds = new ArrayList<>();
 
-		for (int i = 0; i < 10; i++) {
-			User user = userRepository.save(User.create("테스터"));
+		for (int i = 1; i <= num; i++) {
+			User user = userRepository.save(User.create("테스터" + i));
 			userIds.add(user.getId());
 		}
 
@@ -219,5 +235,104 @@ public class CouponServiceConcurrencyTest {
 	private Coupon createTenCoupon() {
 		Coupon coupon = couponRepository.saveCoupon(CouponFixture.create(10));
 		return coupon;
+	}
+
+	@Test
+	@DisplayName("캐시에 있는 쿠폰을 동시에 발급 요청시 동시성 이슈가 발생한다.")
+	void issue_coupon_with_redis_duplicate() throws InterruptedException {
+
+		// given
+		int threadCount = 15;
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+
+		List<Long> userIds = createUsers(15);
+		CouponCommand.Create command = CouponCommand.Create.of(
+			"깜짝쿠폰",
+			1000L,
+			10,
+			CouponType.LIMITED,
+			startDate,
+			endDate
+		);
+
+		CouponInfo.Coupon savedCoupon = couponService.register(command);
+		couponService.loadFcFsCoupon(savedCoupon.getId());
+
+		// when
+		for (int i = 0; i < threadCount; i++) {
+			Long userId = userIds.get(i);
+			executorService.submit(() -> {
+				try{
+					startLatch.await();
+					UserCouponCommand.Issue issue = UserCouponCommand.Issue.of(savedCoupon.getId(), userId);
+					couponService.issueCouponWithRedisCounter(issue);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+
+		startLatch.countDown();
+		latch.await();
+		executorService.shutdown();
+
+		// then
+		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
+		String count = redisRepository.sGet(couponKey);
+		System.out.println("쿠폰남은 개수: " + count);
+		assertThat(count).isLessThan(String.valueOf(0));
+	}
+
+	@Test
+	@DisplayName("lua script를 사용하여 동시성을 보장한다.")
+	void issue_coupon_with_lua() throws InterruptedException {
+
+		// given
+		int threadCount = 15;
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+
+		List<Long> userIds = createUsers(15);
+		CouponCommand.Create command = CouponCommand.Create.of(
+			"깜짝쿠폰",
+			1000L,
+			10,
+			CouponType.LIMITED,
+			startDate,
+			endDate
+		);
+
+		CouponInfo.Coupon savedCoupon = couponService.register(command);
+		couponService.loadFcFsCoupon(savedCoupon.getId());
+
+		// when
+		for (int i = 0; i < threadCount; i++) {
+			Long userId = userIds.get(i);
+			executorService.submit(() -> {
+				try{
+					UserCouponCommand.Issue issue = UserCouponCommand.Issue.of(savedCoupon.getId(), userId);
+					startLatch.await();
+					couponService.issueCouponAtomic(issue);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+
+		startLatch.countDown();
+		latch.await();
+		executorService.shutdown();
+
+		// then
+		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
+		String count = redisRepository.sGet(couponKey);
+		assertThat(count).isEqualTo(String.valueOf(0));
 	}
 }

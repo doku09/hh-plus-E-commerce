@@ -4,15 +4,22 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.infrastructure.coupon.CouponJpaRepository;
 import kr.hhplus.be.server.infrastructure.coupon.UserCouponJpaRepository;
+import kr.hhplus.be.server.infrastructure.redis.RedisRepository;
 import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,11 +40,18 @@ public class CouponServiceIntegrationTest {
 	private CouponService couponService;
 
 	@Autowired
+	private RedisRepository redisRepository;
+
+	@Autowired
 	private UserCouponJpaRepository userCouponJpaRepository;
 	@Autowired
 	private CouponJpaRepository couponJpaRepository;
 	@Autowired
 	private UserJpaRepository userJpaRepository;
+	@Autowired
+	private RedisCacheManager redisCacheManager;
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
 
 
 	@AfterEach
@@ -45,7 +59,12 @@ public class CouponServiceIntegrationTest {
 		userCouponJpaRepository.deleteAllInBatch();
 		couponJpaRepository.deleteAllInBatch();
 		userJpaRepository.deleteAllInBatch();
+
+		redisCacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(redisCacheManager.getCache(cacheName)).clear());
+		redisTemplate.delete(Objects.requireNonNull(redisTemplate.keys("*")));
 	}
+
+
 
 	@Test
 	@DisplayName("쿠폰을 등록한다.")
@@ -61,6 +80,106 @@ public class CouponServiceIntegrationTest {
 		assertThat(result).isNotNull();
 		assertThat(result.getName()).isEqualTo("깜짝쿠폰");
 
+	}
+
+	@Test
+	@DisplayName("저장한 캐시를 레디스 캐시에 적재한다.")
+	@Transactional
+	void redis_regist_coupon_with_redis() {
+
+	  // given
+		CouponCommand.Create command = CouponCommand.Create.of(
+			"깜짝쿠폰",
+			1000L,
+			100,
+			CouponType.LIMITED,
+			startDate,
+			endDate
+		);
+
+	  // when
+		CouponInfo.Coupon savedCoupon = couponService.register(command);
+
+		couponService.loadFcFsCoupon(savedCoupon.getId());
+
+		// then
+		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
+		String count = redisRepository.sGet(couponKey);
+
+		assertThat(count).isEqualTo(String.valueOf(savedCoupon.getQuantity()));
+	}
+
+	@Test
+	@DisplayName("선착순 쿠폰을 레디스 개수기로 발급한다.")
+	void issue_coupon_with_redis() {
+
+		// given
+		User user = userRepository.save(User.create("테스터"));
+		CouponCommand.Create command = CouponCommand.Create.of(
+			"깜짝쿠폰",
+			1000L,
+			100,
+			CouponType.LIMITED,
+			startDate,
+			endDate
+		);
+
+		CouponInfo.Coupon savedCoupon = couponService.register(command);
+		couponService.loadFcFsCoupon(savedCoupon.getId());
+
+		// when
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(savedCoupon.getId(),user.getId());
+		couponService.issueCouponWithRedisCounter(issueCommand);
+
+		// then
+		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
+		String issuedKey = "coupon:" + savedCoupon.getId() + ":issued";
+
+		String count = redisRepository.sGet(couponKey);
+		Set<Object> issuedUsers = redisRepository.getMembersInSet(issuedKey);
+
+		assertThat(issuedUsers)
+			.isNotNull()
+			.contains(String.valueOf(user.getId()));
+
+		assertThat(count).isEqualTo(String.valueOf(savedCoupon.getQuantity() - 1));
+	}
+
+	@Test
+	@DisplayName("쿠폰을 동일한 유저가 중복발행 시 캐시된 쿠폰의 개수가 줄어들지 않는다.")
+	void issue_coupon_with_redis_duplicate() {
+
+		// given
+		User user = userRepository.save(User.create("테스터"));
+		CouponCommand.Create command = CouponCommand.Create.of(
+			"깜짝쿠폰",
+			1000L,
+			100,
+			CouponType.LIMITED,
+			startDate,
+			endDate
+		);
+
+		CouponInfo.Coupon savedCoupon = couponService.register(command);
+		couponService.loadFcFsCoupon(savedCoupon.getId());
+
+		// when
+		UserCouponCommand.Issue issueCommand = UserCouponCommand.Issue.of(savedCoupon.getId(),user.getId());
+		couponService.issueCouponWithRedisCounter(issueCommand);
+		couponService.issueCouponWithRedisCounter(issueCommand);
+
+		// then
+		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
+		String issuedKey = "coupon:" + savedCoupon.getId() + ":issued";
+
+		String count = redisRepository.sGet(couponKey);
+		Set<Object> issuedUsers = redisRepository.getMembersInSet(issuedKey);
+
+		assertThat(issuedUsers)
+			.isNotNull()
+			.contains(String.valueOf(user.getId()));
+
+		assertThat(count).isEqualTo(String.valueOf(savedCoupon.getQuantity() - 1));
 	}
 
 	@Test
