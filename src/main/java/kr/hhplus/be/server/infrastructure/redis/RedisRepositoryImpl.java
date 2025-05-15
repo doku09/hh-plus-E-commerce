@@ -2,6 +2,7 @@ package kr.hhplus.be.server.infrastructure.redis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
@@ -47,8 +48,43 @@ public class RedisRepositoryImpl implements RedisRepository {
 	}
 
 	@Override
+	public void sSet(String key, String value) {
+		valueOps.set(key,value);
+	}
+
+	@Override
+	public void sIncr(String key) {
+		valueOps.increment(key);
+	}
+
+	@Override
+	public void sDecr(String key) {
+		valueOps.decrement(key);
+	}
+
+	@Override
+	public String sGet(String key) {
+		return (String) valueOps.get(key);
+	}
+
+	@Override
+	public Set<Object> getMembersInSet(String key) {
+		return setOps.members(key);
+	}
+
+	@Override
+	public Long execute(DefaultRedisScript<Long> script, List<String> remKey, String s) {
+		return redisTemplate.execute(script,remKey,s);
+	}
+
+	@Override
 	public Boolean expire(String key, Long duration, TimeUnit timeUnit) {
 		return redisTemplate.expire(key,duration,timeUnit);
+	}
+
+	@Override
+	public Boolean expire(String key, Duration ttl) {
+		return redisTemplate.expire(key,ttl);
 	}
 
 	@Override
