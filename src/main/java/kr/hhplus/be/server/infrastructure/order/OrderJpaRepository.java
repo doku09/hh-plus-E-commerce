@@ -16,7 +16,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
 
 	@Query("SELECT o FROM Order o " +
 		"WHERE o.status = 'PAID' " +
-		"AND o.createdAt >= :beforeHours " +
+		"AND o.createdAt >= :before " +
 		"AND o.createdAt < :now")
-	List<Order> getOrderBeforeHour(@Param("beforeHours") LocalDateTime beforeHours, @Param("now") LocalDateTime now);
+	List<Order> getOrderBefore(@Param("before") LocalDateTime before, @Param("now") LocalDateTime now);
 }
