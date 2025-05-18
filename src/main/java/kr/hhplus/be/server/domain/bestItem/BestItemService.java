@@ -27,21 +27,18 @@ public class BestItemService {
 	public BestItem save(BestItem bestItem) {return bestItemRepository.save(bestItem);}
 
 //	@Cacheable(value = "bestItemCache", key = "'top10'")
-	@Transactional
 	public List<BestItemsCacheDto> getTop10BestItems() {
 		log.info("인기상품 캐시조회");
 		List<BestItem> items = bestItemRepository.findTop10ByOrderBySalesCountDesc();
 		return items.stream().map(BestItemsCacheDto::from).toList();
 	}
 
-	@Transactional
 	public Set<Object> getTop10LiveRank() {
 		log.info("실시간 인기상품조회");
 		String LIVE_RANK_KEY = "ranking:live";
 		return redisRepository.getSoretedSetReverseRange(LIVE_RANK_KEY,10);
 	}
 
-	@Transactional
 	public Set<Object> getTop10DailyRank() {
 		log.info("일간 인기상품 조회");
 		String DAILY_KEY_PREFIX = "ranking:daily:";
@@ -49,7 +46,6 @@ public class BestItemService {
 		return redisRepository.getSoretedSetReverseRange(dailyKey,10);
 	}
 
-	@Transactional
 	public Set<Object> getTop10WeeklyRank() {
 		log.info("주간 인기상품 조회");
 		String WEEK_KEY_PREFIX = "ranking:weekly:";

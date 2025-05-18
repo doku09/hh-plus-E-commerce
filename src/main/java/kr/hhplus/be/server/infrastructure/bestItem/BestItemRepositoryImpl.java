@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 public class BestItemRepositoryImpl implements BestItemRepository {
 
 	private final BestItemJpaRepository bestItemJpaRepository;
+	private final BestItemRedisRepository redisRepository;
 
 	@Override
 	public List<BestItem> findBestItemsTopCount(LocalDateTime from, int limit) {
@@ -34,4 +36,11 @@ public class BestItemRepositoryImpl implements BestItemRepository {
 	public List<BestItem> findTop10ByOrderBySalesCountDesc() {
 		return bestItemJpaRepository.findTop10ByOrderBySalesCountDesc();
 	}
+
+	@Override
+	public void incrSortedSet(String key, String value, double quantity, Duration ttl) {
+		redisRepository.incrSortedSet(key, value, quantity, ttl);
+	}
+
+
 }

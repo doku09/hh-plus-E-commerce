@@ -6,6 +6,7 @@ import kr.hhplus.be.server.domain.coupon.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.order.*;
 import kr.hhplus.be.server.domain.payment.PaymentCommand;
+import kr.hhplus.be.server.domain.payment.PaymentEventPublisher;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointCommand;
 import kr.hhplus.be.server.domain.point.PointService;
@@ -29,8 +30,7 @@ public class OrderFacade {
 	private final PointService pointService;
 	private final CouponService couponService;
 	private final PaymentService paymentService;
-
-	private final ApplicationEventPublisher publisher;
+	private final PaymentEventPublisher publisher;
 
 	@Transactional
 	public OrderResult.Order order(OrderCriteria.CreateOrder criteria) {
@@ -74,7 +74,7 @@ public class OrderFacade {
 
 		orderService.updateStatusToPaid(orderInfo.getId());
 
-		publisher.publishEvent(new OrderCompletedEvent(criteria.getOrderItems()));
+		publisher.success(criteria.getOrderItems());
 
 		return OrderResult.Order.of(orderInfo.getId(), orderInfo.getTotalPrice(), orderInfo.getDiscountPrice(), orderInfo.getStatus());
 	}

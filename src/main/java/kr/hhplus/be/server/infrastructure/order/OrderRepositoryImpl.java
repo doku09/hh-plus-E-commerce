@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -33,22 +34,27 @@ public class OrderRepositoryImpl implements OrderRepository {
 	}
 
 	@Override
-	public List<OrderItem> getOrderBeforeHour(int hour) {
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime beforeHours = now.minusHours(hour);
-		List<Order> orders = orderJpaRepository.getOrderBefore(beforeHours,now);
-
-		List<Long> orderIds = orders.stream().map(Order::getId).toList();
-		return orderJpaRepository.findAllOrderItemsByIds(orderIds);
+	public List<OrderItem> getOrderBeforeHour(int hours) {
+		return getOrderItemsWithin(hours, ChronoUnit.HOURS);
 	}
 
 	@Override
-	public List<OrderItem> getOrderBeforeDay(int day) {
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime beforeDays = now.minusDays(day);
-		List<Order> orders = orderJpaRepository.getOrderBefore(beforeDays,now);
+	public List<OrderItem> getOrderBeforeDay(int days) {
+		return getOrderItemsWithin(days, ChronoUnit.DAYS);
+	}
 
-		List<Long> orderIds = orders.stream().map(Order::getId).toList();
+	private List<OrderItem> getOrderItemsWithin(long amount, ChronoUnit unit) {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime start = now.minus(amount, unit);
+
+		// 1) 기간 안에 생성된 Order 조회
+		List<Order> orders = orderJpaRepository.getPaidOderWithDate(start, now);
+
+		// 2) 해당 Order들의 아이템만 다시 조회
+		List<Long> orderIds = orders.stream()
+			.map(Order::getId)
+			.toList();
+
 		return orderJpaRepository.findAllOrderItemsByIds(orderIds);
 	}
 

@@ -88,4 +88,22 @@ class ProductServiceIntegrationTest {
 		assertThat(stock1.getQuantity()).isEqualTo(5);
 		assertThat(stock2.getQuantity()).isEqualTo(0);
 	}
+
+	@Test
+	@DisplayName("상품 재고를 차감한다.")
+	void deduct_product() {
+
+	  // given
+		Product p1 = Product.create("수박", 3000L);
+		productRepository.save(p1);
+		stockRepository.save(ProductStock.createInit(p1.getId(),10));
+
+	  // when
+		productService.deductStockWithAopLock("product",ProductCommand.DeductStock.of(p1.getId(), 5));
+
+
+	  // then
+		ProductStock stock = stockRepository.findByProductId(p1.getId());
+		assertThat(stock.getQuantity()).isEqualTo(5);
+	}
 }

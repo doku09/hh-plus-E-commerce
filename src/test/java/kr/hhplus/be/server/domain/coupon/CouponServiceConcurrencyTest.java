@@ -317,7 +317,7 @@ public class CouponServiceConcurrencyTest {
 				try{
 					UserCouponCommand.Issue issue = UserCouponCommand.Issue.of(savedCoupon.getId(), userId);
 					startLatch.await();
-					couponService.issueCouponAtomic(issue);
+					couponService.issueCouponWithLuaScript(issue);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				} finally {

@@ -68,6 +68,6 @@ public class OrderService {
 	}
 
 	public List<OrderItem> getOrderBeforeDay(int day) {
-		return orderRepository.getOrderBeforeHour(day);
+		return orderRepository.getOrderBeforeDay(day);
 	}
 }

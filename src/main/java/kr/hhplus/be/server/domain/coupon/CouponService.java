@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,9 +19,7 @@ import java.util.Optional;
 public class CouponService {
 
 	private final CouponRepository couponRepository;
-	private final RedisRepository redisRepository;
 
-	// Lua 스크립트를 resources에 두고 읽어올 수도 있습니다.
 	private static final String ISSUE_LUA =
 		"if redis.call('SISMEMBER', KEYS[2], ARGV[1]) == 1 then return -1 end\n" +
 			"local remain = tonumber(redis.call('GET', KEYS[1]) or '0')\n" +
@@ -35,8 +32,8 @@ public class CouponService {
 		Coupon coupon = couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));//RDB
 
 		String couponKey = "coupon:" + coupon.getId() + ":remaining";
-		redisRepository.sSet(couponKey, String.valueOf(coupon.getQuantity()));
-		redisRepository.expire(couponKey, Duration.ofHours(1));
+		couponRepository.setString(couponKey, String.valueOf(coupon.getQuantity()));
+		couponRepository.expire(couponKey, Duration.ofHours(1));
 	}
 
 	// 쿠폰 등록
@@ -92,30 +89,32 @@ public class CouponService {
 		return findCoupon;
 	}
 
+	// Redis String 카운터 활용
 	@Transactional
 	public void issueCouponWithRedisCounter(UserCouponCommand.Issue command) {
 		log.info("캐시 쿠폰발급 시작");
 		String couponKey = "coupon:" + command.getCouponId() + ":remaining";
 		String issuedKey = "coupon:" + command.getCouponId() + ":issued";
 
-		Long added = redisRepository.addSet(issuedKey, String.valueOf(command.getUserId()));
+		Long added = couponRepository.addSet(issuedKey, String.valueOf(command.getUserId()));
 
 		if(added == 0) {
 			log.info("쿠폰 발급 실패, 이미 발급된 쿠폰입니다.");
 			return;
 		}
 
-		if(Integer.parseInt(redisRepository.sGet(couponKey)) <= 0) {
+		if(Integer.parseInt(couponRepository.getString(couponKey)) <= 0) {
 			log.info("쿠폰 발급 실패, 쿠폰이 없습니다.");
 			return;
 		}
 
-		redisRepository.sDecr(couponKey);
+		couponRepository.decrString(couponKey);
 		// 비동기 이벤트로 UserCoupon 데이터 저장
 	}
 
+	// 루아스크립트 활용
 	@Transactional
-	public void issueCouponAtomic(UserCouponCommand.Issue command) {
+	public void issueCouponWithLuaScript(UserCouponCommand.Issue command) {
 		String remKey   = "coupon:" + command.getCouponId() + ":remaining";
 		String issuedKey= "coupon:" + command.getCouponId() + ":issued";
 
@@ -123,7 +122,7 @@ public class CouponService {
 		script.setScriptText(ISSUE_LUA);
 		script.setResultType(Long.class);
 
-		Long result = redisRepository.execute(
+		Long result = couponRepository.execute(
 			script,
 			List.of(remKey, issuedKey),
 			String.valueOf(command.getUserId())
@@ -142,6 +141,8 @@ public class CouponService {
 		// 예) eventPublisher.publish(new CouponIssuedEvent(...));
 	}
 
+
+	// 비관적락
 	/**
 	 * 비관적락이 걸려있는 쿠폰 발급
 	 * @param command
@@ -171,6 +172,7 @@ public class CouponService {
 		return findCoupon;
 	}
 
+	// 분산락
 	@DistributedLockTransaction(key = "#lockName.concat(':').concat(#command.getCouponId())")
 	public Coupon issueCouponWithAnnoationLock(String lockName, UserCouponCommand.Issue command) {
 		Coupon coupon = couponRepository.findCouponById(command.getCouponId()).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
