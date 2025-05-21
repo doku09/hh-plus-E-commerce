@@ -12,6 +12,7 @@ import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.productStock.ProductStock;
 import kr.hhplus.be.server.domain.productStock.ProductStockRepository;
+import kr.hhplus.be.server.infrastructure.order.OrderJpaRepository;
 import kr.hhplus.be.server.infrastructure.redis.RedisRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +42,7 @@ class BestItemServiceIntegrationTest {
 	@Autowired private OrderRepository orderRepository;
 	@Autowired private ProductStockRepository stockRepository;
 	@Autowired private BestItemScheduler bestItemScheduler;
+	@Autowired private OrderJpaRepository orderJpaRepository;
 	@Autowired RedisTemplate<String, Object> redisTemplate;
 	@Autowired RedisRepository redisRepository;
 
@@ -51,6 +53,7 @@ class BestItemServiceIntegrationTest {
 
 	@AfterEach
 	void tearDown() {
+		orderJpaRepository.deleteAllInBatch();
 		Set<String> keys = redisTemplate.keys("*");
 		if (keys != null && !keys.isEmpty()) {
 			// 조회된 키들 한 번에 삭제
