@@ -1,5 +1,9 @@
 package kr.hhplus.be.server.domain.order;
 
+import kr.hhplus.be.server.application.event.DomainEvent;
+import kr.hhplus.be.server.application.event.DomainEventPublisher;
+import kr.hhplus.be.server.application.order.OrderEvent;
+import kr.hhplus.be.server.application.order.OrderItemDto;
 import kr.hhplus.be.server.common.DataFlatFormInterlock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,9 +22,12 @@ public class OrderService {
 
 	private final OrderRepository orderRepository;
 	private final DataFlatFormInterlock dataFlatFormInterlock;
+	private final DomainEventPublisher eventPublisher;
 
 	public OrderInfo.Order createOrder(OrderCommand.Create command) {
+
 		Order order = Order.createOrder(command.getUserId());
+
 		List<OrderCommand.OrderItem> orderItems = command.getOrderItems();
 		for (OrderCommand.OrderItem orderItem : orderItems) {
 			order.addItem(OrderItem.of(orderItem.getProductId(), orderItem.getProductPrice(), orderItem.getQuantity()));
@@ -29,6 +36,15 @@ public class OrderService {
 		order.applyCoupon(command.getCouponId(), command.getDiscountPrice());
 
 		orderRepository.save(order);
+
+		// 주문완료 이벤트 발행
+		eventPublisher.publish(new OrderEvent.Created(
+			order.getId(),
+			command.getUserId(),
+			order.getOrderItems().stream()
+				.map(oi -> new OrderItemDto(oi.getId(),oi.getProductId(),oi.getQuantity(),oi.getProductPrice(),oi.getTotalPrice()))
+				.toList()
+		));
 
 		return OrderInfo.Order.of(order.getId(), order.getTotalPrice(), order.getDiscountPrice(), order.getStatus());
 	}
