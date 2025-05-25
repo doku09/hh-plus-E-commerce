@@ -14,13 +14,15 @@ import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
@@ -30,10 +32,11 @@ public class OrderFacade {
 	private final PointService pointService;
 	private final CouponService couponService;
 	private final PaymentService paymentService;
-	private final PaymentEventPublisher publisher;
+	private final OrderEventPublisher orderEventPublisherublisher;
 
 	@Transactional
 	public OrderResult.Order order(OrderCriteria.CreateOrder criteria) {
+		log.info("주문 시작");
 		// 재고 조회
 		List<ProductCommand.OrderProduct> orderProducts = criteria.getOrderItems().stream()
 			.map(oi -> ProductCommand.OrderProduct.of(
@@ -74,8 +77,12 @@ public class OrderFacade {
 
 		orderService.updateStatusToPaid(orderInfo.getId());
 
-		publisher.success(criteria.getOrderItems());
+		log.info("주문/결제 완료 이벤트발행");
+		log.info("->OrderFacade TransactionName:{}", TransactionSynchronizationManager.getCurrentTransactionName());
+		log.info("->OrderFacade TransactionActive:{}", TransactionSynchronizationManager.isActualTransactionActive());
 
+
+		orderEventPublisherublisher.success(criteria.getOrderItems());
 		return OrderResult.Order.of(orderInfo.getId(), orderInfo.getTotalPrice(), orderInfo.getDiscountPrice(), orderInfo.getStatus());
 	}
 
