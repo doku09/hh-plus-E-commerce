@@ -6,7 +6,6 @@ import kr.hhplus.be.server.domain.coupon.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.order.*;
 import kr.hhplus.be.server.domain.payment.PaymentCommand;
-import kr.hhplus.be.server.domain.payment.PaymentEventPublisher;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointCommand;
 import kr.hhplus.be.server.domain.point.PointService;
@@ -32,10 +31,11 @@ public class OrderFacade {
 	private final PointService pointService;
 	private final CouponService couponService;
 	private final PaymentService paymentService;
-	private final OrderEventPublisher orderEventPublisherublisher;
+	private final OrderEventPublisher orderEventPublisher;
 
 	@Transactional
 	public OrderResult.Order order(OrderCriteria.CreateOrder criteria) {
+
 		log.info("주문 시작");
 		// 재고 조회
 		List<ProductCommand.OrderProduct> orderProducts = criteria.getOrderItems().stream()
@@ -82,7 +82,8 @@ public class OrderFacade {
 		log.info("->OrderFacade TransactionActive:{}", TransactionSynchronizationManager.isActualTransactionActive());
 
 
-		orderEventPublisherublisher.success(criteria.getOrderItems());
+		orderEventPublisher.publish(new OrderCompletedEvent(orderInfo.getId()));
+
 		return OrderResult.Order.of(orderInfo.getId(), orderInfo.getTotalPrice(), orderInfo.getDiscountPrice(), orderInfo.getStatus());
 	}
 

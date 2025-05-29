@@ -1,14 +1,13 @@
 package kr.hhplus.be.server.domain.order;
 
+import kr.hhplus.be.server.application.event.DomainEventPublisher;
 import kr.hhplus.be.server.common.DataFlatFormInterlock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -18,10 +17,14 @@ public class OrderService {
 
 	private final OrderRepository orderRepository;
 	private final DataFlatFormInterlock dataFlatFormInterlock;
+	private final DomainEventPublisher eventPublisher;
 
 	public OrderInfo.Order createOrder(OrderCommand.Create command) {
+
 		Order order = Order.createOrder(command.getUserId());
+
 		List<OrderCommand.OrderItem> orderItems = command.getOrderItems();
+
 		for (OrderCommand.OrderItem orderItem : orderItems) {
 			order.addItem(OrderItem.of(orderItem.getProductId(), orderItem.getProductPrice(), orderItem.getQuantity()));
 		}
@@ -58,9 +61,6 @@ public class OrderService {
 	public void updateStatusToPaid(Long orderId) {
 		Order order = orderRepository.findById(orderId);
 		order.changeStatus(OrderStatus.PAID);
-
-		//TODO: 구현 필요
-		dataFlatFormInterlock.sendToOrderInfo();
 	}
 
 	public List<OrderItem> getOrderBeforeHour(int hour) {

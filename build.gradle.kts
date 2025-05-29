@@ -65,6 +65,9 @@ dependencies {
 	testImplementation("io.rest-assured:rest-assured:${restAssuredVersion}")
 	testImplementation("io.rest-assured:json-path:${restAssuredVersion}")
 	testImplementation("io.rest-assured:json-schema-validator:${restAssuredVersion}")
+
+	//kafka
+	implementation ("org.springframework.kafka:spring-kafka")
 }
 
 tasks.withType<Test> {

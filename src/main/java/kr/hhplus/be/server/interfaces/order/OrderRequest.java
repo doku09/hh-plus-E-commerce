@@ -30,6 +30,7 @@ public class OrderRequest {
 	}
 
 	@Getter
+	@NoArgsConstructor
 	public static class OrderItem {
 		private Long productId;
 		private int quantity;

@@ -32,8 +32,8 @@ public class RankingUpdater {
 		log.info("->OrderFacade --> RankingUpdater TransactionName:{}", TransactionSynchronizationManager.getCurrentTransactionName());
 		log.info("->OrderFacade --> RankingUpdater TransactionActive:{}", TransactionSynchronizationManager.isActualTransactionActive());
 
-		for (OrderCriteria.OrderItem item : event.getItems()) {
-			bestItemRepository.incrSortedSet(LIVE_RANK_KEY, String.valueOf(item.getProductId()), item.getQuantity(), Duration.ofDays(1));
+		for (OrderCompletedEvent.OrderItem orderItem : event.getOrderItems()) {
+			bestItemRepository.incrSortedSet(LIVE_RANK_KEY, String.valueOf(orderItem.getProductId()), orderItem.getQuantity(), Duration.ofDays(1));
 		}
 	}
 }
