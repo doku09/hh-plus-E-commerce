@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.notify;
 
-import kr.hhplus.be.server.application.order.OrderCompletedEvent;
+import kr.hhplus.be.server.domain.order.OrderCompletedEvent;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;

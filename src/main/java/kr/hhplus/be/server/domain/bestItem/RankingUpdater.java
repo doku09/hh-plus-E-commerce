@@ -1,14 +1,10 @@
 package kr.hhplus.be.server.domain.bestItem;
 
-import kr.hhplus.be.server.application.order.OrderCompletedEvent;
-import kr.hhplus.be.server.application.order.OrderCriteria;
-import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.domain.order.OrderCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionSynchronizationManager;

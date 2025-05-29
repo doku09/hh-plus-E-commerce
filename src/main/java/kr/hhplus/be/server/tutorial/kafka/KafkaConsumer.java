@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class KafkaConsumer {
+
 	@KafkaListener(topics = "test-topic", groupId = "my-consumer-group")
 	public void consume(String message) {
 		log.info("Consumed message: {}",message);

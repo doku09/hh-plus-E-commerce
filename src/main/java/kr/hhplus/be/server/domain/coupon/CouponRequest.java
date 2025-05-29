@@ -28,4 +28,17 @@ public class CouponRequest {
 
 
 	}
+
+	@Getter
+	@NoArgsConstructor
+	public static class Issue {
+		private Long userId;
+		private Long couponId;
+	}
+
+	@Getter
+	@NoArgsConstructor
+	public static class Load {
+		private Long couponId;
+	}
 }

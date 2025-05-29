@@ -18,16 +18,20 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -334,5 +338,64 @@ public class CouponServiceConcurrencyTest {
 		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
 		String count = redisRepository.sGet(couponKey);
 		assertThat(count).isEqualTo(String.valueOf(0));
+	}
+
+
+	@Test
+	@DisplayName("카프카 메시지로 순서보장하여 쿠폰을 발급한다.")
+	void issue_coupon_with_kafka_message() throws InterruptedException {
+
+		// given
+		int threadCount = 15;
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+
+		List<Long> userIds = createUsers(15);
+		CouponCommand.Create command = CouponCommand.Create.of(
+			"깜짝쿠폰",
+			1000L,
+			15,
+			CouponType.LIMITED,
+			startDate,
+			endDate
+		);
+
+		CouponInfo.Coupon savedCoupon = couponService.register(command);
+		couponService.loadFcFsCoupon(savedCoupon.getId());
+
+		String couponKey = "coupon:" + savedCoupon.getId() + ":remaining";
+		String count = redisRepository.sGet(couponKey);
+		System.out.println("[BEFORE] 쿠폰개수: " + count);
+
+		// when
+		for (int i = 0; i < threadCount; i++) {
+			Long userId = userIds.get(i);
+			executorService.submit(() -> {
+				try{
+					startLatch.await();
+					RequestIssuedCouponCommand issue = new RequestIssuedCouponCommand(userId,savedCoupon.getId());
+					couponService.requestIssuedCoupon(issue);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+
+		startLatch.countDown();
+		latch.await();
+		executorService.shutdown();
+
+		// then
+		await()
+			.atMost(30, TimeUnit.SECONDS)
+			.pollInterval(Duration.ofMillis(500))
+			.untilAsserted(() -> {
+				String afterCoupon = redisRepository.sGet(couponKey);
+				System.out.println("[AFTER] 쿠폰개수: " + afterCoupon);
+				assertThat(afterCoupon).isEqualTo(String.valueOf(0));
+			});
 	}
 }

@@ -16,7 +16,7 @@ spring:
     generate-ddl: false
 #    show-sql: true
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
@@ -50,8 +50,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.value.default.type: kr.hhplus.be.server.infrastructure.order.OrderCompletedMessage
-        spring.json.trusted.packages: kr.hhplus.be.server.infrastructure.order  # ← 추가
+        spring.json.trusted.packages: "*"
       enable-auto-commit: false
 
 logging:

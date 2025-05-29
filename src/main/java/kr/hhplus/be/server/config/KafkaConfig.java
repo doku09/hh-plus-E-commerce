@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.config;
 
-import kr.hhplus.be.server.infrastructure.order.OrderCompletedMessage;
+import kr.hhplus.be.server.domain.order.OrderCompletedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;

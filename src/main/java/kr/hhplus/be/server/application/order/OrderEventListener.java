@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.application.order;
 
-import kr.hhplus.be.server.infrastructure.order.OrderCompletedMessage;
+import kr.hhplus.be.server.domain.order.OrderCompletedEvent;
+import kr.hhplus.be.server.domain.order.OrderCompletedMessage;
 import kr.hhplus.be.server.infrastructure.order.OrderMessageProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
