@@ -16,7 +16,7 @@ spring:
     generate-ddl: false
 #    show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
@@ -34,10 +34,32 @@ spring:
       port: 6379
   cache:
     type: redis
+  kafka:
+    # Kafka 서버 접속 주소 (Docker compose의 PLAINTEXT_HOST 포트)
+    bootstrap-servers: localhost:9092
+    producer:
+      #	프로듀서 키 직렬화 방식
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 프로듀서 값 직렬화 방식
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: my-group
+      # 초기 오프셋 설정 (가장 처음부터 메시지 소비)
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: kr.hhplus.be.server.infrastructure.order.OrderCompletedMessage
+        spring.json.trusted.packages: kr.hhplus.be.server.infrastructure.order  # ← 추가
+      enable-auto-commit: false
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
 
 # swagger-ui 설정
 #swagger-ui 접속 경로(http://localhost/swagger-ui/index.html)
