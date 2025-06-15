@@ -3,7 +3,8 @@ package kr.hhplus.be.server.domain.coupon;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.common.exception.GlobalBusinessException;
 import kr.hhplus.be.server.common.lock.aop.DistributedLockTransaction;
-import kr.hhplus.be.server.infrastructure.redis.RedisRepository;
+import kr.hhplus.be.server.domain.coupon.event.CouponIssuedRequestMessage;
+import kr.hhplus.be.server.infrastructure.coupon.CouponMessageProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -19,6 +20,7 @@ import java.util.List;
 public class CouponService {
 
 	private final CouponRepository couponRepository;
+	private final CouponMessageProducer producer;
 
 	private static final String ISSUE_LUA =
 		"if redis.call('SISMEMBER', KEYS[2], ARGV[1]) == 1 then return -1 end\n" +
@@ -65,6 +67,9 @@ public class CouponService {
 		return couponRepository.findCouponById(couponId).orElseThrow(() -> new GlobalBusinessException(ErrorCode.NOT_FOUND_COUPON));
 	}
 
+	public void requestIssuedCoupon(RequestIssuedCouponCommand command) {
+		producer.send(new CouponIssuedRequestMessage(command.getUserId(),command.getCouponId()));
+	}
 
 	@Transactional
 	public Coupon issueCoupon(UserCouponCommand.Issue command) {
@@ -133,7 +138,6 @@ public class CouponService {
 		}
 		if (result == -1) {
 			// 이미 발급된 유저라면 그냥 리턴하거나 예외 던지기
-			return;
 		}
 
 		// 여기서는 Redis에서 이미 발급 이력까지 기록했으니,

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.common;
 
-import kr.hhplus.be.server.infrastructure.order.OrderCompletedMessage;
+import kr.hhplus.be.server.domain.order.OrderCompletedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
